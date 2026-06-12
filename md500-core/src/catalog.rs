@@ -20,20 +20,45 @@ use midi_access_core::meta::{choice, Choice, Kind, Level, ParamMeta};
 use midi_access_core::{Catalogs, Params};
 use serde_yaml::{Mapping, Value};
 
-/// The MD-500's (empty) value catalogs — the device has no name↔number tables.
+/// The MD-500's name↔number value catalogs — the two big assign lists and the
+/// EQ corner-frequency tables.
 pub struct Md500Catalogs;
 
 /// The shared singleton referenced by the [`Device`](midi_access_core::Device) impl.
 pub static MD500_CATALOGS: Md500Catalogs = Md500Catalogs;
 
-/// The two name↔number catalogs the MD-500 exposes (the big assign lists).
-const CATALOG_NAMES: &[&str] = &["assign_source", "assign_target"];
+/// The name↔number catalogs the MD-500 exposes.
+const CATALOG_NAMES: &[&str] = &[
+    "assign_source",
+    "assign_target",
+    "eq_low_freq",
+    "eq_high_freq",
+];
+
+/// Low-band EQ corner-frequency labels (index 0..=16) — exactly the values
+/// the device's Low Freq knob steps through. See MIDI Implementation §0x1C.
+pub const EQ_LOW_FREQS: [&str; 17] = [
+    "20.0 Hz", "25.0 Hz", "31.5 Hz", "40.0 Hz", "50.0 Hz", "63.0 Hz", "80.0 Hz", "100 Hz",
+    "125 Hz", "160 Hz", "200 Hz", "250 Hz", "315 Hz", "400 Hz", "500 Hz", "630 Hz", "800 Hz",
+];
+
+/// High-band EQ corner-frequency labels (index 0..=14). See MIDI Implementation §0x1E.
+pub const EQ_HIGH_FREQS: [&str; 15] = [
+    "630 Hz", "800 Hz", "1.00 kHz", "1.25 kHz", "1.60 kHz", "2.00 kHz", "2.50 kHz", "3.15 kHz",
+    "4.00 kHz", "5.00 kHz", "6.30 kHz", "8.00 kHz", "10.0 kHz", "12.5 kHz", "16.0 kHz",
+];
+
+fn lookup_index(list: &[&str], name: &str) -> Option<i64> {
+    list.iter().position(|&s| s == name).map(|i| i as i64)
+}
 
 impl Catalogs for Md500Catalogs {
     fn resolve(&self, cat: &str, name: &str) -> Option<i64> {
         match cat {
             "assign_source" => crate::assigncat::source_index(name),
             "assign_target" => crate::assigncat::target_index(name),
+            "eq_low_freq" => lookup_index(&EQ_LOW_FREQS, name),
+            "eq_high_freq" => lookup_index(&EQ_HIGH_FREQS, name),
             _ => None,
         }
     }
@@ -42,6 +67,8 @@ impl Catalogs for Md500Catalogs {
         match cat {
             "assign_source" => crate::assigncat::source_name(i),
             "assign_target" => crate::assigncat::target_name(i).map(str::to_string),
+            "eq_low_freq" => EQ_LOW_FREQS.get(i).map(|s| s.to_string()),
+            "eq_high_freq" => EQ_HIGH_FREQS.get(i).map(|s| s.to_string()),
             _ => None,
         }
     }
@@ -50,6 +77,8 @@ impl Catalogs for Md500Catalogs {
     }
     fn as_value(&self) -> Value {
         use serde_yaml::Sequence;
+        let to_seq =
+            |xs: &[&str]| -> Sequence { xs.iter().map(|s| Value::String(s.to_string())).collect() };
         let src: Sequence = (0..crate::assigncat::SOURCE_COUNT)
             .filter_map(crate::assigncat::source_name)
             .map(Value::String)
@@ -61,6 +90,14 @@ impl Catalogs for Md500Catalogs {
         let mut m = Mapping::new();
         m.insert(Value::String("assign_source".into()), Value::Sequence(src));
         m.insert(Value::String("assign_target".into()), Value::Sequence(tgt));
+        m.insert(
+            Value::String("eq_low_freq".into()),
+            Value::Sequence(to_seq(&EQ_LOW_FREQS)),
+        );
+        m.insert(
+            Value::String("eq_high_freq".into()),
+            Value::Sequence(to_seq(&EQ_HIGH_FREQS)),
+        );
         Value::Mapping(m)
     }
 }
@@ -230,9 +267,9 @@ static PARAMS: &[ParamMeta] = &[
     pk("patch.common.initial_phase", "Initial phase", "Modulation", "LFO start phase in 15° steps (0–345°).", Kind::Range{min:0,max:23,unit:Some("15deg")}),
     pl("patch.common.effect_level", "Effect Level", "Modulation", "Wet (effect) signal level. The E.LEVEL knob."),
     pk("patch.common.low_level", "Low EQ level", "EQ", "Low-band cut/boost, −50…+50.", Kind::Range{min:-50,max:50,unit:None}),
-    p("patch.common.low_freq", "Low EQ freq", "EQ", "Low-band corner frequency (index 0–16, 20 Hz–800 Hz)."),
+    pc("patch.common.low_freq", "Low EQ freq", "EQ", "Low-band corner frequency: 20 Hz to 800 Hz.", "eq_low_freq"),
     pk("patch.common.high_level", "High EQ level", "EQ", "High-band cut/boost, −50…+50.", Kind::Range{min:-50,max:50,unit:None}),
-    p("patch.common.high_freq", "High EQ freq", "EQ", "High-band corner frequency (index 0–14, 630 Hz–16 kHz)."),
+    pc("patch.common.high_freq", "High EQ freq", "EQ", "High-band corner frequency: 630 Hz to 16 kHz.", "eq_high_freq"),
     p("patch.common.tempo_hold", "Tempo hold", "Modulation", "Keep the current tempo (and Rate) when switching patches."),
     pk("patch.common.insert_sw", "Insert", "Output", "Where the effect sits in the chain.", Kind::Choice(&[choice("off","Off"),choice("pre","Pre"),choice("post","Post")])),
     pk("patch.common.output_mode", "Output", "Output", "Mono or stereo output.", Kind::Choice(&[choice("mono","Mono"),choice("stereo","Stereo")])),
@@ -502,7 +539,15 @@ mod tests {
 
     #[test]
     fn assign_catalogs_resolve_and_label() {
-        assert_eq!(MD500_CATALOGS.names(), &["assign_source", "assign_target"]);
+        assert_eq!(
+            MD500_CATALOGS.names(),
+            &[
+                "assign_source",
+                "assign_target",
+                "eq_low_freq",
+                "eq_high_freq"
+            ]
+        );
         assert!(MD500_CATALOGS.resolve("bogus", "x").is_none());
         // source: named + CC#.
         assert_eq!(MD500_CATALOGS.resolve("assign_source", "TAP/CTL"), Some(0));
@@ -521,11 +566,37 @@ mod tests {
             MD500_CATALOGS.label("assign_target", 0).as_deref(),
             Some("Effect Switch")
         );
-        // as_value exposes both tables for the bundle.
+        // as_value exposes all tables for the bundle.
         let v = MD500_CATALOGS.as_value();
         let m = v.as_mapping().unwrap();
         assert!(m.contains_key(Value::String("assign_source".into())));
         assert!(m.contains_key(Value::String("assign_target".into())));
+        assert!(m.contains_key(Value::String("eq_low_freq".into())));
+        assert!(m.contains_key(Value::String("eq_high_freq".into())));
+    }
+
+    #[test]
+    fn eq_freq_catalogs_resolve_and_label() {
+        assert_eq!(MD500_CATALOGS.resolve("eq_low_freq", "20.0 Hz"), Some(0));
+        assert_eq!(MD500_CATALOGS.resolve("eq_low_freq", "800 Hz"), Some(16));
+        assert!(MD500_CATALOGS.resolve("eq_low_freq", "nope").is_none());
+        assert_eq!(
+            MD500_CATALOGS.label("eq_low_freq", 0).as_deref(),
+            Some("20.0 Hz")
+        );
+        assert_eq!(
+            MD500_CATALOGS.label("eq_low_freq", 16).as_deref(),
+            Some("800 Hz")
+        );
+        assert!(MD500_CATALOGS.label("eq_low_freq", 17).is_none());
+
+        assert_eq!(MD500_CATALOGS.resolve("eq_high_freq", "630 Hz"), Some(0));
+        assert_eq!(MD500_CATALOGS.resolve("eq_high_freq", "16.0 kHz"), Some(14));
+        assert_eq!(
+            MD500_CATALOGS.label("eq_high_freq", 14).as_deref(),
+            Some("16.0 kHz")
+        );
+        assert!(MD500_CATALOGS.label("eq_high_freq", 15).is_none());
     }
 
     #[test]
