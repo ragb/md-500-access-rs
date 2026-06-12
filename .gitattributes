@@ -1,0 +1,9 @@
+# JSON files (including generated schemas) must use LF line endings so the
+# `diff` step in CI matches output of the binary on Linux runners.
+*.json text eol=lf
+
+# SysEx fixtures are binary - never line-ending convert.
+*.syx binary
+
+# License text — store with LF, never auto-convert.
+LICENSE text eol=lf

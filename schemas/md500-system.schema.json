@@ -1,0 +1,572 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "System",
+  "description": "The full System document — both sub-blocks, dumped/synced together.",
+  "type": "object",
+  "required": [
+    "common",
+    "control"
+  ],
+  "properties": {
+    "common": {
+      "$ref": "#/definitions/SystemCommon"
+    },
+    "control": {
+      "$ref": "#/definitions/SystemControl"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "BankSelectOut": {
+      "description": "Which bank-select messages are transmitted. (`MIDI Bank Select OUT`)",
+      "type": "string",
+      "enum": [
+        "msb",
+        "msb_lsb"
+      ]
+    },
+    "BankWaitMode": {
+      "description": "Behaviour when switching banks. (`Bank wait mode`)",
+      "type": "string",
+      "enum": [
+        "wait",
+        "immediate"
+      ]
+    },
+    "BypassMode": {
+      "description": "Effect bypass behaviour. (`Bypass Mode`)",
+      "type": "string",
+      "enum": [
+        "buffered",
+        "true"
+      ]
+    },
+    "CcNumber": {
+      "description": "A controller selector — `OFF`, or a MIDI CC number (`CC#1..#31`, `CC#64..#95`).\n\nWire encoding (the spec's \"MIDI … Control Change#\" fields, range `0 - 63`): `0 = OFF`, `1..=31 = CC#1..#31`, `32..=63 = CC#64..#95`. YAML: `off`, or the integer CC number (e.g. `17`, `64`).",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/CcOff"
+        },
+        {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      ]
+    },
+    "CcOff": {
+      "type": "string",
+      "enum": [
+        "off"
+      ]
+    },
+    "ControlPreference": {
+      "description": "Whether a control follows the patch or a global system setting. (`TAP/CTL/CTL1/CTL2/EXP preference`)",
+      "type": "string",
+      "enum": [
+        "patch",
+        "system"
+      ]
+    },
+    "CtlFunction": {
+      "description": "Function assigned to TAP / CTL1 / CTL2. (spec label: `(TAP|CTL)/CTL Function`)",
+      "type": "string",
+      "enum": [
+        "off",
+        "tap",
+        "reset",
+        "moment",
+        "bank_up",
+        "bank_down"
+      ]
+    },
+    "DisplayType": {
+      "description": "What the main display shows. (`Display Type`)",
+      "type": "string",
+      "enum": [
+        "time",
+        "bpm",
+        "patch",
+        "param"
+      ]
+    },
+    "ExpFunction": {
+      "description": "Function assigned to the expression pedal. (`Exp Pedal Function`)",
+      "type": "string",
+      "enum": [
+        "off",
+        "rate",
+        "depth",
+        "e_level",
+        "param1",
+        "param2"
+      ]
+    },
+    "FootSwitchMode": {
+      "description": "Footswitch operating mode. (`Foot Switch Mode`)",
+      "type": "string",
+      "enum": [
+        "normal",
+        "abc",
+        "ab_simul",
+        "sw_dn_up"
+      ]
+    },
+    "KnobMode": {
+      "description": "How a knob's stored value engages when you turn it. (`Knob Mode`)",
+      "type": "string",
+      "enum": [
+        "immediate",
+        "hook"
+      ]
+    },
+    "MidiRxChannel": {
+      "description": "MIDI receive channel. Wire `0 - 16`: `0..=15 = Ch.1..Ch.16`, `16 = OFF`. YAML: an integer `1..=16`, or `off`.",
+      "anyOf": [
+        {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        {
+          "$ref": "#/definitions/RxSymbol"
+        }
+      ]
+    },
+    "MidiSync": {
+      "description": "Tempo-clock sync source. (`MIDI Sync`)",
+      "type": "string",
+      "enum": [
+        "internal",
+        "ext_usb",
+        "ext_midi",
+        "auto"
+      ]
+    },
+    "MidiTxChannel": {
+      "description": "MIDI transmit channel. Wire `0 - 17`: `0..=15 = Ch.1..Ch.16`, `16 = Rx` (follow receive channel), `17 = OFF`. YAML: an integer `1..=16`, `rx`, or `off`.",
+      "anyOf": [
+        {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        {
+          "$ref": "#/definitions/TxSymbol"
+        }
+      ]
+    },
+    "PedalAction": {
+      "description": "When a momentary pedal action fires. (`Pedal Action`)",
+      "type": "string",
+      "enum": [
+        "push",
+        "release"
+      ]
+    },
+    "RealtimeOut": {
+      "description": "Where realtime messages are routed out. (`MIDI source of real time message to output`)",
+      "type": "string",
+      "enum": [
+        "int",
+        "usb",
+        "midi"
+      ]
+    },
+    "RxSymbol": {
+      "type": "string",
+      "enum": [
+        "off"
+      ]
+    },
+    "SystemCommon": {
+      "description": "Typed view of the System Common block (`10 00 00 00`, 34 bytes).",
+      "type": "object",
+      "required": [
+        "bank_extent_begin",
+        "bank_extent_end",
+        "bank_select_out",
+        "bank_wait_mode",
+        "bypass_mode",
+        "cc_in",
+        "cc_out",
+        "ctl1_cc",
+        "ctl2_cc",
+        "depth_cc",
+        "display_type",
+        "effect_a_cc",
+        "effect_b_cc",
+        "effect_cc",
+        "effect_level_cc",
+        "exp_cc",
+        "foot_switch_mode",
+        "insert_loop_sw",
+        "knob_lock",
+        "knob_mode",
+        "midi_thru",
+        "param1_cc",
+        "param2_cc",
+        "pc_in",
+        "pc_out",
+        "pedal_action",
+        "rate_cc",
+        "realtime_out",
+        "rx_channel",
+        "simul_effect_sw_a",
+        "simul_effect_sw_b",
+        "sync",
+        "tx_channel",
+        "usb_thru"
+      ],
+      "properties": {
+        "bank_extent_begin": {
+          "description": "First bank reachable by BANK UP/DOWN, `1..=99` (offset 0x02).",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "bank_extent_end": {
+          "description": "Last bank reachable by BANK UP/DOWN, `1..=99` (offset 0x03).",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "bank_select_out": {
+          "description": "Bank-select messages to transmit (offset 0x0E).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/BankSelectOut"
+            }
+          ]
+        },
+        "bank_wait_mode": {
+          "description": "Bank switch timing (offset 0x01).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/BankWaitMode"
+            }
+          ]
+        },
+        "bypass_mode": {
+          "description": "Bypass mode (offset 0x06).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/BypassMode"
+            }
+          ]
+        },
+        "cc_in": {
+          "description": "Receive Control Change (offset 0x0F).",
+          "type": "boolean"
+        },
+        "cc_out": {
+          "description": "Transmit Control Change (offset 0x10).",
+          "type": "boolean"
+        },
+        "ctl1_cc": {
+          "description": "CC# for the CTL1 control (offset 0x19).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CcNumber"
+            }
+          ]
+        },
+        "ctl2_cc": {
+          "description": "CC# for the CTL2 control (offset 0x1A).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CcNumber"
+            }
+          ]
+        },
+        "depth_cc": {
+          "description": "CC# that drives DEPTH (offset 0x12).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CcNumber"
+            }
+          ]
+        },
+        "display_type": {
+          "description": "Display readout (offset 0x09).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/DisplayType"
+            }
+          ]
+        },
+        "effect_a_cc": {
+          "description": "CC# for EFFECT A on/off (offset 0x17).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CcNumber"
+            }
+          ]
+        },
+        "effect_b_cc": {
+          "description": "CC# for EFFECT B on/off (offset 0x18).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CcNumber"
+            }
+          ]
+        },
+        "effect_cc": {
+          "description": "CC# for EFFECT on/off (offset 0x16).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CcNumber"
+            }
+          ]
+        },
+        "effect_level_cc": {
+          "description": "CC# that drives EFFECT LEVEL (offset 0x13).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CcNumber"
+            }
+          ]
+        },
+        "exp_cc": {
+          "description": "CC# for the expression pedal (offset 0x1B).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CcNumber"
+            }
+          ]
+        },
+        "foot_switch_mode": {
+          "description": "Footswitch operating mode (offset 0x08).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/FootSwitchMode"
+            }
+          ]
+        },
+        "insert_loop_sw": {
+          "description": "Insert the effect into the send/return loop (offset 0x00).",
+          "type": "boolean"
+        },
+        "knob_lock": {
+          "description": "Lock the panel knobs (offset 0x04).",
+          "type": "boolean"
+        },
+        "knob_mode": {
+          "description": "Knob pickup behaviour (offset 0x05).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/KnobMode"
+            }
+          ]
+        },
+        "midi_thru": {
+          "description": "MIDI IN → OUT THRU routing (offset 0x1E).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ThruRoute"
+            }
+          ]
+        },
+        "param1_cc": {
+          "description": "CC# that drives PARAM 1 (offset 0x14).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CcNumber"
+            }
+          ]
+        },
+        "param2_cc": {
+          "description": "CC# that drives PARAM 2 (offset 0x15).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CcNumber"
+            }
+          ]
+        },
+        "pc_in": {
+          "description": "Receive Program Change (offset 0x0C).",
+          "type": "boolean"
+        },
+        "pc_out": {
+          "description": "Transmit Program Change (offset 0x0D).",
+          "type": "boolean"
+        },
+        "pedal_action": {
+          "description": "Momentary pedal action timing (offset 0x07).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/PedalAction"
+            }
+          ]
+        },
+        "rate_cc": {
+          "description": "CC# that drives RATE/VALUE (offset 0x11).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CcNumber"
+            }
+          ]
+        },
+        "realtime_out": {
+          "description": "Realtime-message output routing (offset 0x1D).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/RealtimeOut"
+            }
+          ]
+        },
+        "rx_channel": {
+          "description": "MIDI receive channel (offset 0x0A).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/MidiRxChannel"
+            }
+          ]
+        },
+        "simul_effect_sw_a": {
+          "description": "PATCH A effect-switch state at power-on, for SIMUL (offset 0x20).",
+          "type": "boolean"
+        },
+        "simul_effect_sw_b": {
+          "description": "PATCH B effect-switch state at power-on, for SIMUL (offset 0x21).",
+          "type": "boolean"
+        },
+        "sync": {
+          "description": "Tempo sync source (offset 0x1C).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/MidiSync"
+            }
+          ]
+        },
+        "tx_channel": {
+          "description": "MIDI transmit channel (offset 0x0B).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/MidiTxChannel"
+            }
+          ]
+        },
+        "usb_thru": {
+          "description": "USB IN → OUT THRU routing (offset 0x1F).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ThruRoute"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "SystemControl": {
+      "description": "Typed view of the System Control block (`10 00 10 00`, 16 bytes).",
+      "type": "object",
+      "required": [
+        "ctl1_function",
+        "ctl1_preference",
+        "ctl2_function",
+        "ctl2_preference",
+        "exp_pedal_function",
+        "exp_preference",
+        "exp_target_max",
+        "exp_target_min",
+        "tap_ctl_function",
+        "tap_ctl_preference"
+      ],
+      "properties": {
+        "ctl1_function": {
+          "description": "Function of the external CTL1 footswitch (offset 0x03).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CtlFunction"
+            }
+          ]
+        },
+        "ctl1_preference": {
+          "description": "Whether CTL1 follows the patch or the system (offset 0x02).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ControlPreference"
+            }
+          ]
+        },
+        "ctl2_function": {
+          "description": "Function of the external CTL2 footswitch (offset 0x05).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CtlFunction"
+            }
+          ]
+        },
+        "ctl2_preference": {
+          "description": "Whether CTL2 follows the patch or the system (offset 0x04).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ControlPreference"
+            }
+          ]
+        },
+        "exp_pedal_function": {
+          "description": "Function of the expression pedal (offset 0x07).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ExpFunction"
+            }
+          ]
+        },
+        "exp_preference": {
+          "description": "Whether the expression pedal follows the patch or the system (offset 0x06).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ControlPreference"
+            }
+          ]
+        },
+        "exp_target_max": {
+          "description": "Expression-pedal target maximum, display `-100..=23000` (offset 0x0C, 4 bytes).",
+          "type": "integer",
+          "format": "int32"
+        },
+        "exp_target_min": {
+          "description": "Expression-pedal target minimum, display `-100..=23000` (offset 0x08, 4 bytes).",
+          "type": "integer",
+          "format": "int32"
+        },
+        "tap_ctl_function": {
+          "description": "Function of the TAP/CTL footswitch (offset 0x01).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CtlFunction"
+            }
+          ]
+        },
+        "tap_ctl_preference": {
+          "description": "Whether TAP/CTL follows the patch or the system (offset 0x00).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ControlPreference"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ThruRoute": {
+      "description": "MIDI/USB THRU routing. (`MIDI In THRU into Out`, `USB In THRU into Out`)",
+      "type": "string",
+      "enum": [
+        "off",
+        "usb",
+        "midi",
+        "usb_midi"
+      ]
+    },
+    "TxSymbol": {
+      "type": "string",
+      "enum": [
+        "rx",
+        "off"
+      ]
+    }
+  }
+}

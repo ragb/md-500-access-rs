@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+  # Opt into Node 24 for JS actions ahead of the June 2026 forced switch.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  native:
+    name: Native (Ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux MIDI deps
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      - name: Test
+        run: cargo test --workspace --locked
+
+      - name: Verify schemas/ are up to date
+        # Regenerates the committed JSON Schemas and fails if they drift. If this
+        # step fails locally, run `tools/regen-schemas.sh` and commit the result.
+        run: |
+          # area token : schema filename slug (patch-a/b/c share the patch schema)
+          for pair in setup:setup system:system pc-map:pc-map bank:bank patch-a:patch; do
+            area="${pair%%:*}"; slug="${pair##*:}"
+            cargo run --release --bin md500 --locked -- schema "$area" > "/tmp/$slug.schema.json"
+            diff -u "schemas/md500-$slug.schema.json" "/tmp/$slug.schema.json"
+          done
+
+  wasm:
+    name: WASM bindings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: latest
+
+      - name: wasm-pack test (Node)
+        working-directory: md500-wasm
+        run: wasm-pack test --node
+
+      - name: wasm-pack build (web)
+        working-directory: md500-wasm
+        run: wasm-pack build --target web --release
+
+      - name: Upload pkg/ artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: md500-wasm-pkg
+          path: md500-wasm/pkg/
+          if-no-files-found: error

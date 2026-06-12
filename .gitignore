@@ -1,0 +1,30 @@
+/target
+**/*.rs.bk
+Cargo.lock.bak
+
+# WASM build outputs
+/md500-wasm/pkg
+/md500-wasm/target
+
+# Roland's MIDI-implementation PDF, owner's/editor manuals, and the throwaway
+# text/scripts I extracted from them live here — copyrighted, not redistributed.
+# (My own running log, docs/sysex-notes.md, is kept.)
+docs/spec/
+
+# YAML dumps the user produces by running `md500 dump`
+tools/dumps/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Claude Code per-project state
+.claude/
+
+# Temp commit-message files
+*_commit_msg.txt
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,1576 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Patch",
+  "description": "A complete MD-500 patch (586 bytes).",
+  "type": "object",
+  "required": [
+    "assign_input_sens",
+    "assigns",
+    "chorus",
+    "common",
+    "control",
+    "cvibe",
+    "dimension",
+    "filter",
+    "flanger",
+    "led_status",
+    "name",
+    "overtone",
+    "phaser",
+    "ring_mod",
+    "rotary",
+    "slicer",
+    "tremolo",
+    "vibrato"
+  ],
+  "properties": {
+    "assign_input_sens": {
+      "description": "Shared assign input sensitivity, `0..=100` (0x248).",
+      "type": "integer",
+      "format": "uint8",
+      "minimum": 0.0
+    },
+    "assigns": {
+      "description": "The eight assign slots.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Assign"
+      }
+    },
+    "chorus": {
+      "$ref": "#/definitions/Chorus"
+    },
+    "common": {
+      "$ref": "#/definitions/PatchCommon"
+    },
+    "control": {
+      "$ref": "#/definitions/PatchControl"
+    },
+    "cvibe": {
+      "$ref": "#/definitions/CVibe"
+    },
+    "dimension": {
+      "$ref": "#/definitions/Dimension"
+    },
+    "filter": {
+      "$ref": "#/definitions/Filter"
+    },
+    "flanger": {
+      "$ref": "#/definitions/Flanger"
+    },
+    "led_status": {
+      "description": "Whether the LED reflects patch state (0x249).",
+      "type": "boolean"
+    },
+    "name": {
+      "description": "Patch name, up to 16 ASCII characters.",
+      "type": "string"
+    },
+    "overtone": {
+      "$ref": "#/definitions/Overtone"
+    },
+    "phaser": {
+      "$ref": "#/definitions/Phaser"
+    },
+    "ring_mod": {
+      "$ref": "#/definitions/RingMod"
+    },
+    "rotary": {
+      "$ref": "#/definitions/Rotary"
+    },
+    "slicer": {
+      "$ref": "#/definitions/Slicer"
+    },
+    "tremolo": {
+      "$ref": "#/definitions/Tremolo"
+    },
+    "vibrato": {
+      "$ref": "#/definitions/Vibrato"
+    }
+  },
+  "definitions": {
+    "Assign": {
+      "description": "One of the eight ASSIGN slots (25 bytes). `source` (`0..=69`) and `target` (`0..=264`) index large controller / parameter-target lists kept as integers; `target_min`/`target_max` are the device's scaled target values (display `-100..=2400000`).",
+      "type": "object",
+      "required": [
+        "active_range_hi",
+        "active_range_lo",
+        "internal_pedal_curve",
+        "internal_pedal_time",
+        "internal_pedal_trigger",
+        "source",
+        "source_mode",
+        "sw",
+        "target",
+        "target_max",
+        "target_min",
+        "wave_form",
+        "wave_rate"
+      ],
+      "properties": {
+        "active_range_hi": {
+          "description": "Active-range high, `1..=127`.",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "active_range_lo": {
+          "description": "Active-range low, `0..=126`.",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "internal_pedal_curve": {
+          "$ref": "#/definitions/AssignPedalCurve"
+        },
+        "internal_pedal_time": {
+          "description": "Internal-pedal time, `0..=100`.",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "internal_pedal_trigger": {
+          "description": "Internal-pedal trigger source, `0..=68`.",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "source": {
+          "description": "Source selector, `0..=69`.",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "source_mode": {
+          "$ref": "#/definitions/AssignSourceMode"
+        },
+        "sw": {
+          "type": "boolean"
+        },
+        "target": {
+          "description": "Target parameter index, `0..=264` (3 bytes).",
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0.0
+        },
+        "target_max": {
+          "description": "Target maximum, display `-100..=2400000` (6 bytes).",
+          "type": "integer",
+          "format": "int32"
+        },
+        "target_min": {
+          "description": "Target minimum, display `-100..=2400000` (6 bytes).",
+          "type": "integer",
+          "format": "int32"
+        },
+        "wave_form": {
+          "$ref": "#/definitions/AssignWaveForm"
+        },
+        "wave_rate": {
+          "description": "Wave rate, `0..=113` (0..100 plus note values).",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "AssignPedalCurve": {
+      "description": "Internal-pedal curve for an assign (assign +0x18).",
+      "type": "string",
+      "enum": [
+        "linear",
+        "slow",
+        "fast"
+      ]
+    },
+    "AssignSourceMode": {
+      "description": "Whether an assign source latches or is momentary (assign +0x02).",
+      "type": "string",
+      "enum": [
+        "moment",
+        "toggle"
+      ]
+    },
+    "AssignWaveForm": {
+      "description": "Internal-LFO waveform for an assign's WAVE source (assign +0x15).",
+      "type": "string",
+      "enum": [
+        "saw",
+        "tri",
+        "sin"
+      ]
+    },
+    "AutoWah": {
+      "description": "One AUTO WAH engine (G or B).",
+      "type": "object",
+      "required": [
+        "depth",
+        "filter_mode",
+        "frequency",
+        "resonance",
+        "waveform"
+      ],
+      "properties": {
+        "depth": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "filter_mode": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "frequency": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "resonance": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "waveform": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "CVibe": {
+      "description": "C-VIBE-mode parameters.",
+      "type": "object",
+      "required": [
+        "cvibe_type",
+        "depth",
+        "direct_level",
+        "note"
+      ],
+      "properties": {
+        "cvibe_type": {
+          "$ref": "#/definitions/CVibeType"
+        },
+        "depth": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "direct_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "note": {
+          "$ref": "#/definitions/NoteValue"
+        }
+      }
+    },
+    "CVibeType": {
+      "description": "C-VIBE sub-algorithm (offset 0x76).",
+      "type": "string",
+      "enum": [
+        "prime",
+        "scanner"
+      ]
+    },
+    "Chorus": {
+      "description": "CHORUS-mode parameters (PRIME / CE-1 CHORUS / CE-1 VIBRATO / TRI-CHO).",
+      "type": "object",
+      "required": [
+        "ce1_depth",
+        "ce1_preamp_gain",
+        "ce1_preamp_level",
+        "ce1_preamp_sw",
+        "chorus_type",
+        "direct_level",
+        "note",
+        "prime_bell",
+        "prime_depth",
+        "prime_high_cut",
+        "prime_low_cut",
+        "prime_pre_delay",
+        "prime_sweetness",
+        "prime_waveform",
+        "tricho_bright",
+        "tricho_intensity1",
+        "tricho_intensity2",
+        "tricho_intensity3",
+        "tricho_lfo_mode"
+      ],
+      "properties": {
+        "ce1_depth": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "ce1_preamp_gain": {
+          "description": "CE-1 preamp gain, 0..=99.",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "ce1_preamp_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "ce1_preamp_sw": {
+          "type": "boolean"
+        },
+        "chorus_type": {
+          "$ref": "#/definitions/ChorusType"
+        },
+        "direct_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "note": {
+          "$ref": "#/definitions/NoteValue"
+        },
+        "prime_bell": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_depth": {
+          "description": "PRIME modulation depth (0..=100).",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_high_cut": {
+          "description": "PRIME high cut index, 0..=15.",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_low_cut": {
+          "description": "PRIME low cut index, 0..=17.",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_pre_delay": {
+          "description": "PRIME pre-delay, 0..=400 ms (3 bytes).",
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0.0
+        },
+        "prime_sweetness": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_waveform": {
+          "description": "PRIME waveform, 0..=9 (= 1..10).",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "tricho_bright": {
+          "type": "boolean"
+        },
+        "tricho_intensity1": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "tricho_intensity2": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "tricho_intensity3": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "tricho_lfo_mode": {
+          "description": "TRI-CHO LFO mode, 0..=2.",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "ChorusType": {
+      "description": "CHORUS sub-algorithm (offset 0x23).",
+      "type": "string",
+      "enum": [
+        "prime",
+        "ce1_chorus",
+        "ce1_vibrato",
+        "tri_cho"
+      ]
+    },
+    "CtlFunction": {
+      "description": "Function assigned to TAP / CTL1 / CTL2. (spec label: `(TAP|CTL)/CTL Function`)",
+      "type": "string",
+      "enum": [
+        "off",
+        "tap",
+        "reset",
+        "moment",
+        "bank_up",
+        "bank_down"
+      ]
+    },
+    "Dimension": {
+      "description": "DIMENSION-mode parameters.",
+      "type": "object",
+      "required": [
+        "direct_level",
+        "mode",
+        "user_mode1_sw",
+        "user_mode2_sw",
+        "user_mode3_sw",
+        "user_mode4_sw",
+        "user_mode5_sw"
+      ],
+      "properties": {
+        "direct_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "mode": {
+          "$ref": "#/definitions/DimensionMode"
+        },
+        "user_mode1_sw": {
+          "type": "boolean"
+        },
+        "user_mode2_sw": {
+          "type": "boolean"
+        },
+        "user_mode3_sw": {
+          "type": "boolean"
+        },
+        "user_mode4_sw": {
+          "type": "boolean"
+        },
+        "user_mode5_sw": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DimensionMode": {
+      "description": "DIMENSION preset mode (offset 0x95) — Dimension D buttons 1–4, or USER.",
+      "type": "string",
+      "enum": [
+        "m1",
+        "m2",
+        "m3",
+        "m4",
+        "user"
+      ]
+    },
+    "ExpFunction": {
+      "description": "Function assigned to the expression pedal. (`Exp Pedal Function`)",
+      "type": "string",
+      "enum": [
+        "off",
+        "rate",
+        "depth",
+        "e_level",
+        "param1",
+        "param2"
+      ]
+    },
+    "Filter": {
+      "description": "FILTER-mode parameters (A-WAH G/B, T-WAH G/B, PATTERN).",
+      "type": "object",
+      "required": [
+        "auto_wah_b",
+        "auto_wah_g",
+        "direct_level",
+        "filter_type",
+        "note",
+        "pattern",
+        "touch_wah_b",
+        "touch_wah_g"
+      ],
+      "properties": {
+        "auto_wah_b": {
+          "$ref": "#/definitions/AutoWah"
+        },
+        "auto_wah_g": {
+          "$ref": "#/definitions/AutoWah"
+        },
+        "direct_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "filter_type": {
+          "$ref": "#/definitions/FilterType"
+        },
+        "note": {
+          "$ref": "#/definitions/NoteValue"
+        },
+        "pattern": {
+          "$ref": "#/definitions/FilterPattern"
+        },
+        "touch_wah_b": {
+          "$ref": "#/definitions/TouchWah"
+        },
+        "touch_wah_g": {
+          "$ref": "#/definitions/TouchWah"
+        }
+      }
+    },
+    "FilterPattern": {
+      "description": "FILTER PATTERN engine.",
+      "type": "object",
+      "required": [
+        "filter_mode",
+        "frequencies",
+        "pattern_type",
+        "resonance",
+        "step_number",
+        "transition"
+      ],
+      "properties": {
+        "filter_mode": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "frequencies": {
+          "description": "Per-step filter frequencies (24 steps).",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint8",
+            "minimum": 0.0
+          }
+        },
+        "pattern_type": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "resonance": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "step_number": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "transition": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "FilterType": {
+      "description": "FILTER sub-algorithm (offset 0xB1).",
+      "type": "string",
+      "enum": [
+        "auto_wah_g",
+        "auto_wah_b",
+        "touch_wah_g",
+        "touch_wah_b",
+        "pattern"
+      ]
+    },
+    "Flanger": {
+      "description": "FLANGER-mode parameters.",
+      "type": "object",
+      "required": [
+        "direct_level",
+        "flanger_type",
+        "note",
+        "prime_b",
+        "prime_g"
+      ],
+      "properties": {
+        "direct_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "flanger_type": {
+          "$ref": "#/definitions/FlangerType"
+        },
+        "note": {
+          "$ref": "#/definitions/NoteValue"
+        },
+        "prime_b": {
+          "$ref": "#/definitions/FlangerEngine"
+        },
+        "prime_g": {
+          "$ref": "#/definitions/FlangerEngine"
+        }
+      }
+    },
+    "FlangerEngine": {
+      "description": "One FLANGER engine (PRIME G or PRIME B share this 13-byte layout).",
+      "type": "object",
+      "required": [
+        "depth",
+        "high_cut",
+        "high_damp",
+        "input_sens",
+        "low_cut",
+        "low_damp",
+        "manual",
+        "polarity",
+        "resonance",
+        "separation",
+        "step_rate",
+        "turbo_sw",
+        "waveform"
+      ],
+      "properties": {
+        "depth": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "high_cut": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "high_damp": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "input_sens": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "low_cut": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "low_damp": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "manual": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "polarity": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "resonance": {
+          "description": "Resonance (raw 0..=100; display −100..0 on the device).",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "separation": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "step_rate": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "turbo_sw": {
+          "type": "boolean"
+        },
+        "waveform": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "FlangerType": {
+      "description": "FLANGER sub-algorithm (offset 0x38).",
+      "type": "string",
+      "enum": [
+        "prime_g",
+        "prime_b"
+      ]
+    },
+    "InsertSw": {
+      "description": "Where the effect sits in the signal path (offset 0x20).",
+      "type": "string",
+      "enum": [
+        "off",
+        "pre",
+        "post"
+      ]
+    },
+    "ModulationMode": {
+      "description": "The active modulation algorithm (offset 0x10).",
+      "type": "string",
+      "enum": [
+        "chorus",
+        "flanger",
+        "phaser",
+        "c_vibe",
+        "vibrato",
+        "tremolo",
+        "dimension",
+        "ring_mod",
+        "rotary",
+        "filter",
+        "slicer",
+        "overtone"
+      ]
+    },
+    "NoteValue": {
+      "description": "Standard tempo-sync note division (`0 - 17`), reused by every mode's \"Note\" parameter. The MD-500 names them as fractions of a bar.",
+      "type": "string",
+      "enum": [
+        "thirty_second",
+        "sixteenth_triplet",
+        "dotted_thirty_second",
+        "sixteenth",
+        "eighth_triplet",
+        "dotted_sixteenth",
+        "eighth",
+        "quarter_triplet",
+        "dotted_eighth",
+        "quarter",
+        "half_triplet",
+        "dotted_quarter",
+        "half",
+        "whole_triplet",
+        "dotted_half",
+        "whole",
+        "dotted_whole",
+        "double_whole"
+      ]
+    },
+    "OutputMode": {
+      "description": "Mono vs stereo output (offset 0x21).",
+      "type": "string",
+      "enum": [
+        "mono",
+        "stereo"
+      ]
+    },
+    "Overtone": {
+      "description": "OVERTONE-mode parameters.",
+      "type": "object",
+      "required": [
+        "detune",
+        "detune1_level",
+        "detune1_pitch",
+        "detune2_level",
+        "detune2_pitch",
+        "direct_level",
+        "lower_level",
+        "overtone_type",
+        "tone_high",
+        "tone_low",
+        "unison_level",
+        "upper_level"
+      ],
+      "properties": {
+        "detune": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "detune1_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "detune1_pitch": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "detune2_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "detune2_pitch": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "direct_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "lower_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "overtone_type": {
+          "$ref": "#/definitions/OvertoneType"
+        },
+        "tone_high": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "tone_low": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "unison_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "upper_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "OvertoneType": {
+      "description": "OVERTONE sub-algorithm (offset 0x167).",
+      "type": "string",
+      "enum": [
+        "overtone",
+        "detune"
+      ]
+    },
+    "PatchCommon": {
+      "description": "Shared modulation parameters present for every mode (offsets 0x10..0x23).",
+      "type": "object",
+      "required": [
+        "bpm",
+        "effect_level",
+        "high_freq",
+        "high_level",
+        "initial_phase",
+        "insert_sw",
+        "low_freq",
+        "low_level",
+        "mode",
+        "output_gain",
+        "output_mode",
+        "rate",
+        "tempo_hold"
+      ],
+      "properties": {
+        "bpm": {
+          "description": "Tempo, `1..=96000` = ♩0.1–9600.0 (0x14, 5 bytes).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "effect_level": {
+          "description": "Effect level, `0..=100` (0x1A).",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "high_freq": {
+          "description": "High EQ frequency index, `0..=14` (0x1E).",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "high_level": {
+          "description": "High EQ level, `-50..=+50` (0x1D).",
+          "type": "integer",
+          "format": "int8"
+        },
+        "initial_phase": {
+          "description": "Initial LFO phase, `0..=23` (15° steps) (0x19).",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "insert_sw": {
+          "description": "Insert position (0x20).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/InsertSw"
+            }
+          ]
+        },
+        "low_freq": {
+          "description": "Low EQ frequency index, `0..=16` (0x1C).",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "low_level": {
+          "description": "Low EQ level, `-50..=+50` (0x1B).",
+          "type": "integer",
+          "format": "int8"
+        },
+        "mode": {
+          "description": "Active modulation algorithm (0x10).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ModulationMode"
+            }
+          ]
+        },
+        "output_gain": {
+          "description": "Output gain, `-6..=+6` dB (0x22).",
+          "type": "integer",
+          "format": "int8"
+        },
+        "output_mode": {
+          "description": "Output mode (0x21).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/OutputMode"
+            }
+          ]
+        },
+        "rate": {
+          "description": "LFO rate, `1..=2000` = 0.01–20.00 Hz (0x11, 3 bytes).",
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0.0
+        },
+        "tempo_hold": {
+          "description": "Hold tempo across patch changes (0x1F).",
+          "type": "boolean"
+        }
+      }
+    },
+    "PatchControl": {
+      "description": "Per-patch footswitch / expression assignments (used when the matching System Control `preference` is `PATCH`).",
+      "type": "object",
+      "required": [
+        "ctl1_function",
+        "ctl2_function",
+        "exp_pedal_function",
+        "exp_target_max",
+        "exp_target_min",
+        "reserved_174",
+        "tap_ctl_function"
+      ],
+      "properties": {
+        "ctl1_function": {
+          "$ref": "#/definitions/CtlFunction"
+        },
+        "ctl2_function": {
+          "$ref": "#/definitions/CtlFunction"
+        },
+        "exp_pedal_function": {
+          "$ref": "#/definitions/ExpFunction"
+        },
+        "exp_target_max": {
+          "description": "Expression target max, display `-100..=10000` (4 bytes).",
+          "type": "integer",
+          "format": "int32"
+        },
+        "exp_target_min": {
+          "description": "Expression target min, display `-100..=10000` (4 bytes).",
+          "type": "integer",
+          "format": "int32"
+        },
+        "reserved_174": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "tap_ctl_function": {
+          "$ref": "#/definitions/CtlFunction"
+        }
+      }
+    },
+    "Phaser": {
+      "description": "PHASER-mode parameters.",
+      "type": "object",
+      "required": [
+        "direct_level",
+        "note",
+        "phaser_type",
+        "prime_b",
+        "prime_g",
+        "reserved_74",
+        "script_depth"
+      ],
+      "properties": {
+        "direct_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "note": {
+          "$ref": "#/definitions/NoteValue"
+        },
+        "phaser_type": {
+          "$ref": "#/definitions/PhaserType"
+        },
+        "prime_b": {
+          "$ref": "#/definitions/PhaserEngine"
+        },
+        "prime_g": {
+          "$ref": "#/definitions/PhaserEngine"
+        },
+        "reserved_74": {
+          "description": "Reserved/dummy byte at 0x74.",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "script_depth": {
+          "description": "SCRIPT modulation depth (0x75).",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "PhaserEngine": {
+      "description": "One PHASER engine (PRIME G or PRIME B share this 14-byte layout).",
+      "type": "object",
+      "required": [
+        "bi_phase",
+        "depth",
+        "high_cut",
+        "high_damp",
+        "input_sens",
+        "low_cut",
+        "low_damp",
+        "manual",
+        "polarity",
+        "resonance",
+        "separation",
+        "stage",
+        "step_rate",
+        "waveform"
+      ],
+      "properties": {
+        "bi_phase": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "depth": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "high_cut": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "high_damp": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "input_sens": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "low_cut": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "low_damp": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "manual": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "polarity": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "resonance": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "separation": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "stage": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "step_rate": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "waveform": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "PhaserType": {
+      "description": "PHASER sub-algorithm (offset 0x55).",
+      "type": "string",
+      "enum": [
+        "prime_g",
+        "prime_b",
+        "script"
+      ]
+    },
+    "RingMod": {
+      "description": "RING MODULATION-mode parameters.",
+      "type": "object",
+      "required": [
+        "direct_level",
+        "freq_mod_depth",
+        "freq_mod_rate",
+        "frequency",
+        "intelligent"
+      ],
+      "properties": {
+        "direct_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "freq_mod_depth": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "freq_mod_rate": {
+          "description": "Frequency-modulation rate (3 bytes).",
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0.0
+        },
+        "frequency": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "intelligent": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "Rotary": {
+      "description": "ROTARY-mode parameters.",
+      "type": "object",
+      "required": [
+        "direct_level",
+        "drive",
+        "fall_time",
+        "fast_rate",
+        "mic_distance",
+        "rise_time",
+        "rotor_horn_balance",
+        "slow_rate",
+        "speed"
+      ],
+      "properties": {
+        "direct_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "drive": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "fall_time": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "fast_rate": {
+          "description": "Fast rotor rate (3 bytes).",
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0.0
+        },
+        "mic_distance": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "rise_time": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "rotor_horn_balance": {
+          "description": "Rotor/Horn balance (2 bytes).",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "slow_rate": {
+          "description": "Slow rotor rate (3 bytes).",
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0.0
+        },
+        "speed": {
+          "description": "Speed selector (SLOW/FAST), raw.",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "Slicer": {
+      "description": "SLICER-mode parameters.",
+      "type": "object",
+      "required": [
+        "attack",
+        "direct_level",
+        "duty",
+        "fx_type",
+        "note",
+        "output_mode",
+        "pattern",
+        "step_number",
+        "steps"
+      ],
+      "properties": {
+        "attack": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "direct_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "duty": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "fx_type": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "note": {
+          "$ref": "#/definitions/NoteValue"
+        },
+        "output_mode": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "pattern": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "step_number": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "steps": {
+          "description": "24 user-pattern steps.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SlicerStep"
+          }
+        }
+      }
+    },
+    "SlicerStep": {
+      "description": "One SLICER user-pattern step.",
+      "type": "object",
+      "required": [
+        "band",
+        "effect_level",
+        "effect_pitch",
+        "length",
+        "level"
+      ],
+      "properties": {
+        "band": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "effect_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "effect_pitch": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "length": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "TouchWah": {
+      "description": "One TOUCH WAH engine (G or B).",
+      "type": "object",
+      "required": [
+        "decay",
+        "filter_mode",
+        "frequency",
+        "polarity",
+        "resonance",
+        "sens"
+      ],
+      "properties": {
+        "decay": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "filter_mode": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "frequency": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "polarity": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "resonance": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "sens": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "Tremolo": {
+      "description": "TREMOLO-mode parameters (PRIME T / PRIME P / TWIN / DELUXE).",
+      "type": "object",
+      "required": [
+        "direct_level",
+        "note",
+        "prime_p_depth",
+        "prime_p_envelope_sens",
+        "prime_p_input_sens",
+        "prime_p_rise_time",
+        "prime_p_waveform",
+        "prime_t_depth",
+        "prime_t_envelope_sens",
+        "prime_t_input_sens",
+        "prime_t_rise_time",
+        "prime_t_waveform",
+        "reserved_89",
+        "reserved_8f",
+        "tremolo_type",
+        "twin_deluxe_intensity"
+      ],
+      "properties": {
+        "direct_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "note": {
+          "$ref": "#/definitions/NoteValue"
+        },
+        "prime_p_depth": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_p_envelope_sens": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_p_input_sens": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_p_rise_time": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_p_waveform": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_t_depth": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_t_envelope_sens": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_t_input_sens": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_t_rise_time": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_t_waveform": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "reserved_89": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "reserved_8f": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "tremolo_type": {
+          "$ref": "#/definitions/TremoloType"
+        },
+        "twin_deluxe_intensity": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "TremoloType": {
+      "description": "TREMOLO sub-algorithm (offset 0x85).",
+      "type": "string",
+      "enum": [
+        "prime_t",
+        "prime_p",
+        "twin",
+        "deluxe"
+      ]
+    },
+    "Vibrato": {
+      "description": "VIBRATO-mode parameters (PRIME + SCANNER).",
+      "type": "object",
+      "required": [
+        "direct_level",
+        "note",
+        "prime_color",
+        "prime_depth",
+        "prime_envelope_sens",
+        "prime_input_sens",
+        "prime_rise_time",
+        "prime_waveform",
+        "scanner_mode",
+        "trigger",
+        "vibrato_type"
+      ],
+      "properties": {
+        "direct_level": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "note": {
+          "$ref": "#/definitions/NoteValue"
+        },
+        "prime_color": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_depth": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_envelope_sens": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_input_sens": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_rise_time": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "prime_waveform": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "scanner_mode": {
+          "description": "SCANNER mode (0x84).",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "trigger": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "vibrato_type": {
+          "$ref": "#/definitions/VibratoType"
+        }
+      }
+    },
+    "VibratoType": {
+      "description": "VIBRATO sub-algorithm (offset 0x7A).",
+      "type": "string",
+      "enum": [
+        "prime",
+        "scanner"
+      ]
+    }
+  }
+}

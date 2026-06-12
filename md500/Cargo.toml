@@ -1,0 +1,16 @@
+[package]
+name = "md500"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "CLI for the BOSS MD-500 (dump/sync/diff/show/lint/schema/catalog/resolve)."
+
+[[bin]]
+name = "md500"
+path = "src/main.rs"
+
+[dependencies]
+# The CLI is the generic engine; `md500` only wires its Device impl into `run`.
+md500-core = { workspace = true, features = ["schema"] }
+midi-access-cli = { workspace = true }

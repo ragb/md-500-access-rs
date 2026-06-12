@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BankParams",
+  "description": "Typed view of a bank's SIMUL parameter block.",
+  "type": "object",
+  "required": [
+    "ab_sync_sw",
+    "insert_position",
+    "output_mode",
+    "structure"
+  ],
+  "properties": {
+    "ab_sync_sw": {
+      "description": "Synchronise A and B tempo/LFO (offset 0x03).",
+      "type": "boolean"
+    },
+    "insert_position": {
+      "description": "Insert position relative to the loop (offset 0x01).",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BankInsertPosition"
+        }
+      ]
+    },
+    "output_mode": {
+      "description": "Mix vs A/B output routing (offset 0x02).",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BankOutputMode"
+        }
+      ]
+    },
+    "structure": {
+      "description": "Series vs parallel routing of the two effects (offset 0x00).",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BankStructure"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "BankInsertPosition": {
+      "description": "Where the bank's effects sit relative to the insert loop. (`Insert Position`)",
+      "type": "string",
+      "enum": [
+        "off",
+        "pre",
+        "post",
+        "middle"
+      ]
+    },
+    "BankOutputMode": {
+      "description": "Output routing for the two effects. (`Output Mode`)",
+      "type": "string",
+      "enum": [
+        "mix",
+        "ab"
+      ]
+    },
+    "BankStructure": {
+      "description": "How the two effects are chained in SIMUL. (`Structure`)",
+      "type": "string",
+      "enum": [
+        "series",
+        "parallel"
+      ]
+    }
+  }
+}
