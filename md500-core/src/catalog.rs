@@ -46,6 +46,9 @@ const CATALOG_NAMES: &[&str] = &[
     "slicer_output_mode",
     "slicer_fx_type",
     "rotary_speed",
+    "tricho_lfo_mode",
+    "scanner_mode",
+    "onoff",
 ];
 
 /// Low-band EQ corner-frequency labels (index 0..=16) — exactly the values
@@ -116,6 +119,17 @@ pub const SLICER_FX_TYPE: [&str; 7] = [
 /// Rotary speed (slow / fast rotor). Index 0..=1.
 pub const ROTARY_SPEED: [&str; 2] = ["SLOW", "FAST"];
 
+/// Chorus TRI-CHO LFO mode (PRESET / MANUAL / both). Index 0..=2.
+pub const TRICHO_LFO_MODE: [&str; 3] = ["PRESET", "MANUAL", "P+M"];
+
+/// Vibrato SCANNER mode — Univibe-style scanner positions, Vibrato 1..3 and
+/// Chorus 1..3. Index 0..=5.
+pub const SCANNER_MODE: [&str; 6] = ["V1", "V2", "V3", "C1", "C2", "C3"];
+
+/// Generic OFF / ON labels, for 1-bit fields that act as a toggle but are
+/// typed as `u8` on the wire (e.g. Vibrato `trigger`). Index 0..=1.
+pub const ONOFF: [&str; 2] = ["OFF", "ON"];
+
 fn lookup_index(list: &[&str], name: &str) -> Option<i64> {
     list.iter().position(|&s| s == name).map(|i| i as i64)
 }
@@ -138,6 +152,9 @@ const SIMPLE_LISTS: &[(&str, &[&str])] = &[
     ("slicer_output_mode", &SLICER_OUTPUT_MODE),
     ("slicer_fx_type", &SLICER_FX_TYPE),
     ("rotary_speed", &ROTARY_SPEED),
+    ("tricho_lfo_mode", &TRICHO_LFO_MODE),
+    ("scanner_mode", &SCANNER_MODE),
+    ("onoff", &ONOFF),
 ];
 
 fn simple_list(cat: &str) -> Option<&'static [&'static str]> {
@@ -376,7 +393,7 @@ static PARAMS: &[ParamMeta] = &[
     p("patch.chorus.ce1_preamp_sw", "CE-1 preamp", "Chorus", "Engage the CE-1 preamp colouring."),
     p("patch.chorus.ce1_preamp_gain", "CE-1 preamp gain", "Chorus", "Drive of the CE-1 preamp (0–99)."),
     pl("patch.chorus.ce1_preamp_level", "CE-1 preamp level", "Chorus", "Output level of the CE-1 preamp."),
-    p("patch.chorus.tricho_lfo_mode", "Tri-Cho LFO mode", "Chorus", "LFO mode of the 3-phase chorus (0–2)."),
+    pc("patch.chorus.tricho_lfo_mode", "Tri-Cho LFO mode", "Chorus", "LFO mode of the 3-phase chorus.", "tricho_lfo_mode"),
     pl("patch.chorus.tricho_intensity1", "Tri-Cho intensity 1", "Chorus", "Depth of the 3-phase chorus voice 1."),
     pl("patch.chorus.tricho_intensity2", "Tri-Cho intensity 2", "Chorus", "Depth of the 3-phase chorus voice 2."),
     pl("patch.chorus.tricho_intensity3", "Tri-Cho intensity 3", "Chorus", "Depth of the 3-phase chorus voice 3."),
@@ -459,12 +476,12 @@ static PARAMS: &[ParamMeta] = &[
     pl("patch.vibrato.direct_level", "Direct level", "Vibrato", "Level of the dry signal blended with the effect."),
     pl("patch.vibrato.prime_depth", "Depth", "Vibrato", "Modulation depth."),
     p("patch.vibrato.prime_color", "Color", "Vibrato", "Tonal colour of the vibrato voice."),
-    p("patch.vibrato.trigger", "Trigger", "Vibrato", "Re-triggers the LFO from playing dynamics."),
+    pc("patch.vibrato.trigger", "Trigger", "Vibrato", "Re-triggers the LFO from playing dynamics.", "onoff"),
     p("patch.vibrato.prime_rise_time", "Rise time", "Vibrato", "How quickly the vibrato fades in after a trigger."),
     p("patch.vibrato.prime_envelope_sens", "Envelope sens", "Vibrato", "Sensitivity of the envelope trigger."),
     p("patch.vibrato.prime_waveform", "Waveform", "Vibrato", "Modulation waveform."),
     p("patch.vibrato.prime_input_sens", "Input sens", "Vibrato", "Input sensitivity for envelope response."),
-    p("patch.vibrato.scanner_mode", "Scanner mode", "Vibrato", "Scanner-vibrato variation."),
+    pc("patch.vibrato.scanner_mode", "Scanner mode", "Vibrato", "Univibe-style scanner position (V1–V3 vibrato, C1–C3 chorus).", "scanner_mode"),
 
     // ===== Patch / Tremolo =====
     pk("patch.tremolo.tremolo_type", "Tremolo type", "Tremolo", "PRIME T (tremolo), PRIME P (auto-pan), TWIN, or DELUXE voicing.", Kind::Choice(&[choice("prime_t","Prime T"),choice("prime_p","Prime P"),choice("twin","Twin"),choice("deluxe","Deluxe")])),
@@ -707,6 +724,12 @@ mod tests {
             ("slicer_fx_type", "RING", 6, "RING"),
             ("rotary_speed", "SLOW", 0, "SLOW"),
             ("rotary_speed", "FAST", 1, "FAST"),
+            ("tricho_lfo_mode", "PRESET", 0, "PRESET"),
+            ("tricho_lfo_mode", "P+M", 2, "P+M"),
+            ("scanner_mode", "V1", 0, "V1"),
+            ("scanner_mode", "C3", 5, "C3"),
+            ("onoff", "OFF", 0, "OFF"),
+            ("onoff", "ON", 1, "ON"),
         ];
         for (cat, name, idx, back) in cases {
             assert_eq!(
