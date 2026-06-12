@@ -33,6 +33,19 @@ const CATALOG_NAMES: &[&str] = &[
     "assign_target",
     "eq_low_freq",
     "eq_high_freq",
+    "cut_low_freq",
+    "cut_high_freq",
+    "filter_mode",
+    "polarity",
+    "lfo_waveform_6",
+    "phaser_stage",
+    "bi_phase",
+    "pattern_type",
+    "pattern_step_count",
+    "slicer_step_band",
+    "slicer_output_mode",
+    "slicer_fx_type",
+    "rotary_speed",
 ];
 
 /// Low-band EQ corner-frequency labels (index 0..=16) — exactly the values
@@ -48,8 +61,90 @@ pub const EQ_HIGH_FREQS: [&str; 15] = [
     "4.00 kHz", "5.00 kHz", "6.30 kHz", "8.00 kHz", "10.0 kHz", "12.5 kHz", "16.0 kHz",
 ];
 
+/// Low-cut corner-frequency labels (index 0..=17) used by Chorus / Flanger /
+/// Phaser `prime_*.low_cut` and `chorus.prime_low_cut`. Same Hz list as
+/// [`EQ_LOW_FREQS`] but prefixed with `FLAT` (= no cut).
+pub const CUT_LOW_FREQS: [&str; 18] = [
+    "FLAT", "20.0 Hz", "25.0 Hz", "31.5 Hz", "40.0 Hz", "50.0 Hz", "63.0 Hz", "80.0 Hz", "100 Hz",
+    "125 Hz", "160 Hz", "200 Hz", "250 Hz", "315 Hz", "400 Hz", "500 Hz", "630 Hz", "800 Hz",
+];
+
+/// High-cut corner-frequency labels (index 0..=15). Same as [`EQ_HIGH_FREQS`]
+/// suffixed with `FLAT` (= no cut).
+pub const CUT_HIGH_FREQS: [&str; 16] = [
+    "630 Hz", "800 Hz", "1.00 kHz", "1.25 kHz", "1.60 kHz", "2.00 kHz", "2.50 kHz", "3.15 kHz",
+    "4.00 kHz", "5.00 kHz", "6.30 kHz", "8.00 kHz", "10.0 kHz", "12.5 kHz", "16.0 kHz", "FLAT",
+];
+
+/// Filter-mode labels (LPF / HPF / BPF), shared by every filter sub-engine.
+/// Index 0..=2.
+pub const FILTER_MODES: [&str; 3] = ["LPF", "HPF", "BPF"];
+
+/// Modulation polarity, index 0..=1.
+pub const POLARITY: [&str; 2] = ["DOWN", "UP"];
+
+/// The 6-entry LFO waveform list used by the Filter auto-wah engines.
+/// Index 0..=5.
+pub const LFO_WAVEFORM_6: [&str; 6] = ["SIN", "TRI", "SQR", "SAW-UP", "SAW-DOWN", "RAMP"];
+
+/// Phaser stage count: 2 / 4 / 8 / 16 / 24 stages. Index 0..=4.
+pub const PHASER_STAGE: [&str; 5] = ["2", "4", "8", "16", "24"];
+
+/// Phaser bi-phase mode: CHORUS or VIBRATO voicing. Index 0..=1.
+pub const BI_PHASE: [&str; 2] = ["CHORUS", "VIBRATO"];
+
+/// Filter PATTERN type — 10 factory patterns plus USER. Index 0..=10.
+pub const PATTERN_TYPE: [&str; 11] = [
+    "PAT1", "PAT2", "PAT3", "PAT4", "PAT5", "PAT6", "PAT7", "PAT8", "PAT9", "PAT10", "USER",
+];
+
+/// Filter PATTERN step count: 8 / 12 / 16 / 24 active steps. Index 0..=3.
+pub const PATTERN_STEP_COUNT: [&str; 4] = ["8", "12", "16", "24"];
+
+/// Slicer per-step frequency band. Index 0..=6.
+pub const SLICER_STEP_BAND: [&str; 7] =
+    ["THRU", "BAND1", "BAND2", "BAND3", "BAND4", "BAND5", "BAND6"];
+
+/// Slicer output mode. Index 0..=4.
+pub const SLICER_OUTPUT_MODE: [&str; 5] = ["MONO", "FIXED", "RANDOM", "PingPong", "AUTO"];
+
+/// Slicer FX type. Index 0..=6.
+pub const SLICER_FX_TYPE: [&str; 7] = [
+    "OFF", "PITCH", "FLANGER", "PHASER", "SWEEP", "FILTER", "RING",
+];
+
+/// Rotary speed (slow / fast rotor). Index 0..=1.
+pub const ROTARY_SPEED: [&str; 2] = ["SLOW", "FAST"];
+
 fn lookup_index(list: &[&str], name: &str) -> Option<i64> {
     list.iter().position(|&s| s == name).map(|i| i as i64)
+}
+
+/// Dispatch table for the simple index-keyed string catalogs in this file
+/// (everything except the two big assign lists, which live in `assigncat`).
+const SIMPLE_LISTS: &[(&str, &[&str])] = &[
+    ("eq_low_freq", &EQ_LOW_FREQS),
+    ("eq_high_freq", &EQ_HIGH_FREQS),
+    ("cut_low_freq", &CUT_LOW_FREQS),
+    ("cut_high_freq", &CUT_HIGH_FREQS),
+    ("filter_mode", &FILTER_MODES),
+    ("polarity", &POLARITY),
+    ("lfo_waveform_6", &LFO_WAVEFORM_6),
+    ("phaser_stage", &PHASER_STAGE),
+    ("bi_phase", &BI_PHASE),
+    ("pattern_type", &PATTERN_TYPE),
+    ("pattern_step_count", &PATTERN_STEP_COUNT),
+    ("slicer_step_band", &SLICER_STEP_BAND),
+    ("slicer_output_mode", &SLICER_OUTPUT_MODE),
+    ("slicer_fx_type", &SLICER_FX_TYPE),
+    ("rotary_speed", &ROTARY_SPEED),
+];
+
+fn simple_list(cat: &str) -> Option<&'static [&'static str]> {
+    SIMPLE_LISTS
+        .iter()
+        .find(|(n, _)| *n == cat)
+        .map(|(_, l)| *l)
 }
 
 impl Catalogs for Md500Catalogs {
@@ -57,9 +152,7 @@ impl Catalogs for Md500Catalogs {
         match cat {
             "assign_source" => crate::assigncat::source_index(name),
             "assign_target" => crate::assigncat::target_index(name),
-            "eq_low_freq" => lookup_index(&EQ_LOW_FREQS, name),
-            "eq_high_freq" => lookup_index(&EQ_HIGH_FREQS, name),
-            _ => None,
+            other => simple_list(other).and_then(|l| lookup_index(l, name)),
         }
     }
     fn label(&self, cat: &str, value: i64) -> Option<String> {
@@ -67,9 +160,7 @@ impl Catalogs for Md500Catalogs {
         match cat {
             "assign_source" => crate::assigncat::source_name(i),
             "assign_target" => crate::assigncat::target_name(i).map(str::to_string),
-            "eq_low_freq" => EQ_LOW_FREQS.get(i).map(|s| s.to_string()),
-            "eq_high_freq" => EQ_HIGH_FREQS.get(i).map(|s| s.to_string()),
-            _ => None,
+            other => simple_list(other).and_then(|l| l.get(i).map(|s| s.to_string())),
         }
     }
     fn names(&self) -> &[&str] {
@@ -90,14 +181,9 @@ impl Catalogs for Md500Catalogs {
         let mut m = Mapping::new();
         m.insert(Value::String("assign_source".into()), Value::Sequence(src));
         m.insert(Value::String("assign_target".into()), Value::Sequence(tgt));
-        m.insert(
-            Value::String("eq_low_freq".into()),
-            Value::Sequence(to_seq(&EQ_LOW_FREQS)),
-        );
-        m.insert(
-            Value::String("eq_high_freq".into()),
-            Value::Sequence(to_seq(&EQ_HIGH_FREQS)),
-        );
+        for (name, list) in SIMPLE_LISTS {
+            m.insert(Value::String((*name).into()), Value::Sequence(to_seq(list)));
+        }
         Value::Mapping(m)
     }
 }
@@ -284,8 +370,8 @@ static PARAMS: &[ParamMeta] = &[
     p("patch.chorus.prime_waveform", "PRIME waveform", "Chorus", "Modulation waveform of the PRIME chorus (1–10)."),
     pl("patch.chorus.prime_sweetness", "PRIME sweetness", "Chorus", "Smooths and thickens the PRIME chorus voice."),
     pl("patch.chorus.prime_bell", "PRIME bell", "Chorus", "Adds bell-like shimmer to the PRIME chorus."),
-    p("patch.chorus.prime_low_cut", "PRIME low cut", "Chorus", "Low-cut filter on the PRIME chorus (Flat, 20 Hz–800 Hz)."),
-    p("patch.chorus.prime_high_cut", "PRIME high cut", "Chorus", "High-cut filter on the PRIME chorus (630 Hz–16 kHz, Flat)."),
+    pc("patch.chorus.prime_low_cut", "PRIME low cut", "Chorus", "Low-cut filter on the PRIME chorus.", "cut_low_freq"),
+    pc("patch.chorus.prime_high_cut", "PRIME high cut", "Chorus", "High-cut filter on the PRIME chorus.", "cut_high_freq"),
     pl("patch.chorus.ce1_depth", "CE-1 depth", "Chorus", "Modulation depth of the CE-1 chorus/vibrato model."),
     p("patch.chorus.ce1_preamp_sw", "CE-1 preamp", "Chorus", "Engage the CE-1 preamp colouring."),
     p("patch.chorus.ce1_preamp_gain", "CE-1 preamp gain", "Chorus", "Drive of the CE-1 preamp (0–99)."),
@@ -306,26 +392,26 @@ static PARAMS: &[ParamMeta] = &[
     p("patch.flanger.prime_g.turbo_sw", "G turbo", "Flanger", "Turbo makes the flange more intense (PRIME G)."),
     p("patch.flanger.prime_g.low_damp", "G low damp", "Flanger", "Damps the low end of the flange (PRIME G)."),
     p("patch.flanger.prime_g.high_damp", "G high damp", "Flanger", "Damps the high end of the flange (PRIME G)."),
-    p("patch.flanger.prime_g.low_cut", "G low cut", "Flanger", "Low-cut filter (PRIME G)."),
-    p("patch.flanger.prime_g.high_cut", "G high cut", "Flanger", "High-cut filter (PRIME G)."),
+    pc("patch.flanger.prime_g.low_cut", "G low cut", "Flanger", "Low-cut filter (PRIME G).", "cut_low_freq"),
+    pc("patch.flanger.prime_g.high_cut", "G high cut", "Flanger", "High-cut filter (PRIME G).", "cut_high_freq"),
     p("patch.flanger.prime_g.separation", "G separation", "Flanger", "Stereo spread of the flange (PRIME G)."),
     p("patch.flanger.prime_g.step_rate", "G step rate", "Flanger", "Step-modulation rate; Off for smooth sweep (PRIME G)."),
     p("patch.flanger.prime_g.waveform", "G waveform", "Flanger", "Modulation waveform (PRIME G)."),
     p("patch.flanger.prime_g.input_sens", "G input sens", "Flanger", "Input sensitivity for envelope response (PRIME G)."),
-    p("patch.flanger.prime_g.polarity", "G polarity", "Flanger", "Modulation polarity (PRIME G)."),
+    pc("patch.flanger.prime_g.polarity", "G polarity", "Flanger", "Modulation polarity (PRIME G).", "polarity"),
     pl("patch.flanger.prime_b.depth", "B depth", "Flanger", "Modulation depth (PRIME B)."),
     p("patch.flanger.prime_b.resonance", "B resonance", "Flanger", "Feedback/resonance of the flange comb (PRIME B)."),
     p("patch.flanger.prime_b.manual", "B manual", "Flanger", "Centre frequency of the flange sweep (PRIME B)."),
     p("patch.flanger.prime_b.turbo_sw", "B turbo", "Flanger", "Turbo makes the flange more intense (PRIME B)."),
     p("patch.flanger.prime_b.low_damp", "B low damp", "Flanger", "Damps the low end of the flange (PRIME B)."),
     p("patch.flanger.prime_b.high_damp", "B high damp", "Flanger", "Damps the high end of the flange (PRIME B)."),
-    p("patch.flanger.prime_b.low_cut", "B low cut", "Flanger", "Low-cut filter (PRIME B)."),
-    p("patch.flanger.prime_b.high_cut", "B high cut", "Flanger", "High-cut filter (PRIME B)."),
+    pc("patch.flanger.prime_b.low_cut", "B low cut", "Flanger", "Low-cut filter (PRIME B).", "cut_low_freq"),
+    pc("patch.flanger.prime_b.high_cut", "B high cut", "Flanger", "High-cut filter (PRIME B).", "cut_high_freq"),
     p("patch.flanger.prime_b.separation", "B separation", "Flanger", "Stereo spread of the flange (PRIME B)."),
     p("patch.flanger.prime_b.step_rate", "B step rate", "Flanger", "Step-modulation rate; Off for smooth sweep (PRIME B)."),
     p("patch.flanger.prime_b.waveform", "B waveform", "Flanger", "Modulation waveform (PRIME B)."),
     p("patch.flanger.prime_b.input_sens", "B input sens", "Flanger", "Input sensitivity for envelope response (PRIME B)."),
-    p("patch.flanger.prime_b.polarity", "B polarity", "Flanger", "Modulation polarity (PRIME B)."),
+    pc("patch.flanger.prime_b.polarity", "B polarity", "Flanger", "Modulation polarity (PRIME B).", "polarity"),
 
     // ===== Patch / Phaser =====
     pk("patch.phaser.phaser_type", "Phaser type", "Phaser", "Phaser voicing: PRIME G, PRIME B, or the vintage Script phaser.", Kind::Choice(&[choice("prime_g","Prime G"),choice("prime_b","Prime B"),choice("script","Script")])),
@@ -336,29 +422,29 @@ static PARAMS: &[ParamMeta] = &[
     p("patch.phaser.prime_g.manual", "G manual", "Phaser", "Centre frequency of the phase sweep (PRIME G)."),
     p("patch.phaser.prime_g.low_damp", "G low damp", "Phaser", "Damps the low end (PRIME G)."),
     p("patch.phaser.prime_g.high_damp", "G high damp", "Phaser", "Damps the high end (PRIME G)."),
-    p("patch.phaser.prime_g.low_cut", "G low cut", "Phaser", "Low-cut filter (PRIME G)."),
-    p("patch.phaser.prime_g.high_cut", "G high cut", "Phaser", "High-cut filter (PRIME G)."),
+    pc("patch.phaser.prime_g.low_cut", "G low cut", "Phaser", "Low-cut filter (PRIME G).", "cut_low_freq"),
+    pc("patch.phaser.prime_g.high_cut", "G high cut", "Phaser", "High-cut filter (PRIME G).", "cut_high_freq"),
     p("patch.phaser.prime_g.separation", "G separation", "Phaser", "Stereo spread (PRIME G)."),
     p("patch.phaser.prime_g.waveform", "G waveform", "Phaser", "Modulation waveform (PRIME G)."),
     p("patch.phaser.prime_g.input_sens", "G input sens", "Phaser", "Input sensitivity for envelope response (PRIME G)."),
-    p("patch.phaser.prime_g.polarity", "G polarity", "Phaser", "Modulation polarity (PRIME G)."),
-    p("patch.phaser.prime_g.stage", "G stage", "Phaser", "Number of phaser stages (PRIME G)."),
+    pc("patch.phaser.prime_g.polarity", "G polarity", "Phaser", "Modulation polarity (PRIME G).", "polarity"),
+    pc("patch.phaser.prime_g.stage", "G stage", "Phaser", "Number of phaser stages (PRIME G).", "phaser_stage"),
     p("patch.phaser.prime_g.step_rate", "G step rate", "Phaser", "Step-modulation rate (PRIME G)."),
-    p("patch.phaser.prime_g.bi_phase", "G bi-phase", "Phaser", "Bi-phase mode for a richer sweep (PRIME G)."),
+    pc("patch.phaser.prime_g.bi_phase", "G bi-phase", "Phaser", "Bi-phase mode for a richer sweep (PRIME G).", "bi_phase"),
     pl("patch.phaser.prime_b.depth", "B depth", "Phaser", "Modulation depth (PRIME B)."),
     p("patch.phaser.prime_b.resonance", "B resonance", "Phaser", "Resonance/feedback of the phase notches (PRIME B)."),
     p("patch.phaser.prime_b.manual", "B manual", "Phaser", "Centre frequency of the phase sweep (PRIME B)."),
     p("patch.phaser.prime_b.low_damp", "B low damp", "Phaser", "Damps the low end (PRIME B)."),
     p("patch.phaser.prime_b.high_damp", "B high damp", "Phaser", "Damps the high end (PRIME B)."),
-    p("patch.phaser.prime_b.low_cut", "B low cut", "Phaser", "Low-cut filter (PRIME B)."),
-    p("patch.phaser.prime_b.high_cut", "B high cut", "Phaser", "High-cut filter (PRIME B)."),
+    pc("patch.phaser.prime_b.low_cut", "B low cut", "Phaser", "Low-cut filter (PRIME B).", "cut_low_freq"),
+    pc("patch.phaser.prime_b.high_cut", "B high cut", "Phaser", "High-cut filter (PRIME B).", "cut_high_freq"),
     p("patch.phaser.prime_b.separation", "B separation", "Phaser", "Stereo spread (PRIME B)."),
     p("patch.phaser.prime_b.waveform", "B waveform", "Phaser", "Modulation waveform (PRIME B)."),
     p("patch.phaser.prime_b.input_sens", "B input sens", "Phaser", "Input sensitivity for envelope response (PRIME B)."),
-    p("patch.phaser.prime_b.polarity", "B polarity", "Phaser", "Modulation polarity (PRIME B)."),
-    p("patch.phaser.prime_b.stage", "B stage", "Phaser", "Number of phaser stages (PRIME B)."),
+    pc("patch.phaser.prime_b.polarity", "B polarity", "Phaser", "Modulation polarity (PRIME B).", "polarity"),
+    pc("patch.phaser.prime_b.stage", "B stage", "Phaser", "Number of phaser stages (PRIME B).", "phaser_stage"),
     p("patch.phaser.prime_b.step_rate", "B step rate", "Phaser", "Step-modulation rate (PRIME B)."),
-    p("patch.phaser.prime_b.bi_phase", "B bi-phase", "Phaser", "Bi-phase mode for a richer sweep (PRIME B)."),
+    pc("patch.phaser.prime_b.bi_phase", "B bi-phase", "Phaser", "Bi-phase mode for a richer sweep (PRIME B).", "bi_phase"),
     pl("patch.phaser.script_depth", "Script depth", "Phaser", "Modulation depth of the vintage Script phaser voicing."),
 
     // ===== Patch / C-Vibe =====
@@ -413,7 +499,7 @@ static PARAMS: &[ParamMeta] = &[
     pl("patch.ring_mod.direct_level", "Direct level", "Ring Mod", "Level of the dry signal blended with the effect."),
 
     // ===== Patch / Rotary (rotary speaker simulation) =====
-    p("patch.rotary.speed", "Speed", "Rotary", "Rotor speed select (Slow/Fast)."),
+    pc("patch.rotary.speed", "Speed", "Rotary", "Rotor speed select.", "rotary_speed"),
     p("patch.rotary.slow_rate", "Slow rate", "Rotary", "Rotor rate in the Slow setting."),
     p("patch.rotary.fast_rate", "Fast rate", "Rotary", "Rotor rate in the Fast setting."),
     p("patch.rotary.rise_time", "Rise time", "Rotary", "How quickly the rotor accelerates to Fast."),
@@ -430,28 +516,28 @@ static PARAMS: &[ParamMeta] = &[
     pl("patch.filter.auto_wah_g.depth", "Auto Wah G depth", "Filter", "LFO sweep depth (Auto Wah G)."),
     p("patch.filter.auto_wah_g.frequency", "Auto Wah G freq", "Filter", "Centre frequency of the wah (Auto Wah G)."),
     p("patch.filter.auto_wah_g.resonance", "Auto Wah G resonance", "Filter", "Filter resonance/peak (Auto Wah G)."),
-    p("patch.filter.auto_wah_g.filter_mode", "Auto Wah G mode", "Filter", "Filter type: LPF/BPF/HPF (Auto Wah G)."),
-    p("patch.filter.auto_wah_g.waveform", "Auto Wah G waveform", "Filter", "LFO waveform (Auto Wah G)."),
+    pc("patch.filter.auto_wah_g.filter_mode", "Auto Wah G mode", "Filter", "Filter type (Auto Wah G).", "filter_mode"),
+    pc("patch.filter.auto_wah_g.waveform", "Auto Wah G waveform", "Filter", "LFO waveform (Auto Wah G).", "lfo_waveform_6"),
     pl("patch.filter.auto_wah_b.depth", "Auto Wah B depth", "Filter", "LFO sweep depth (Auto Wah B)."),
     p("patch.filter.auto_wah_b.frequency", "Auto Wah B freq", "Filter", "Centre frequency of the wah (Auto Wah B)."),
     p("patch.filter.auto_wah_b.resonance", "Auto Wah B resonance", "Filter", "Filter resonance/peak (Auto Wah B)."),
-    p("patch.filter.auto_wah_b.filter_mode", "Auto Wah B mode", "Filter", "Filter type: LPF/BPF/HPF (Auto Wah B)."),
-    p("patch.filter.auto_wah_b.waveform", "Auto Wah B waveform", "Filter", "LFO waveform (Auto Wah B)."),
-    p("patch.filter.touch_wah_g.filter_mode", "Touch Wah G mode", "Filter", "Filter type: LPF/BPF/HPF (Touch Wah G)."),
-    p("patch.filter.touch_wah_g.polarity", "Touch Wah G polarity", "Filter", "Sweep up or down with input level (Touch Wah G)."),
+    pc("patch.filter.auto_wah_b.filter_mode", "Auto Wah B mode", "Filter", "Filter type (Auto Wah B).", "filter_mode"),
+    pc("patch.filter.auto_wah_b.waveform", "Auto Wah B waveform", "Filter", "LFO waveform (Auto Wah B).", "lfo_waveform_6"),
+    pc("patch.filter.touch_wah_g.filter_mode", "Touch Wah G mode", "Filter", "Filter type (Touch Wah G).", "filter_mode"),
+    pc("patch.filter.touch_wah_g.polarity", "Touch Wah G polarity", "Filter", "Sweep up or down with input level (Touch Wah G).", "polarity"),
     p("patch.filter.touch_wah_g.sens", "Touch Wah G sens", "Filter", "Sensitivity to playing dynamics (Touch Wah G)."),
     p("patch.filter.touch_wah_g.frequency", "Touch Wah G freq", "Filter", "Base centre frequency (Touch Wah G)."),
     p("patch.filter.touch_wah_g.resonance", "Touch Wah G resonance", "Filter", "Filter resonance/peak (Touch Wah G)."),
     p("patch.filter.touch_wah_g.decay", "Touch Wah G decay", "Filter", "How quickly the wah returns after a transient (Touch Wah G)."),
-    p("patch.filter.touch_wah_b.filter_mode", "Touch Wah B mode", "Filter", "Filter type: LPF/BPF/HPF (Touch Wah B)."),
-    p("patch.filter.touch_wah_b.polarity", "Touch Wah B polarity", "Filter", "Sweep up or down with input level (Touch Wah B)."),
+    pc("patch.filter.touch_wah_b.filter_mode", "Touch Wah B mode", "Filter", "Filter type (Touch Wah B).", "filter_mode"),
+    pc("patch.filter.touch_wah_b.polarity", "Touch Wah B polarity", "Filter", "Sweep up or down with input level (Touch Wah B).", "polarity"),
     p("patch.filter.touch_wah_b.sens", "Touch Wah B sens", "Filter", "Sensitivity to playing dynamics (Touch Wah B)."),
     p("patch.filter.touch_wah_b.frequency", "Touch Wah B freq", "Filter", "Base centre frequency (Touch Wah B)."),
     p("patch.filter.touch_wah_b.resonance", "Touch Wah B resonance", "Filter", "Filter resonance/peak (Touch Wah B)."),
     p("patch.filter.touch_wah_b.decay", "Touch Wah B decay", "Filter", "How quickly the wah returns after a transient (Touch Wah B)."),
-    p("patch.filter.pattern.filter_mode", "Pattern mode", "Filter", "Filter type for the pattern sequencer (LPF/BPF/HPF)."),
-    p("patch.filter.pattern.pattern_type", "Pattern type", "Filter", "Preset or user step pattern."),
-    p("patch.filter.pattern.step_number", "Pattern steps", "Filter", "Number of active steps in the pattern."),
+    pc("patch.filter.pattern.filter_mode", "Pattern mode", "Filter", "Filter type for the pattern sequencer.", "filter_mode"),
+    pc("patch.filter.pattern.pattern_type", "Pattern type", "Filter", "Preset (PAT1–PAT10) or USER step pattern.", "pattern_type"),
+    pc("patch.filter.pattern.step_number", "Pattern steps", "Filter", "Number of active steps in the pattern.", "pattern_step_count"),
     p("patch.filter.pattern.resonance", "Pattern resonance", "Filter", "Filter resonance for the pattern sequencer."),
     p("patch.filter.pattern.transition", "Pattern transition", "Filter", "Smoothness of the jump between steps."),
     p("patch.filter.pattern.frequencies", "Pattern step freqs", "Filter", "Cutoff frequency for each of the 24 pattern steps."),
@@ -459,17 +545,17 @@ static PARAMS: &[ParamMeta] = &[
     // ===== Patch / Slicer =====
     p("patch.slicer.note", "Note", "Slicer", "Sets the slice cycle from the tempo as a note value."),
     p("patch.slicer.pattern", "Pattern", "Slicer", "Preset slice pattern, or USER to program your own."),
-    p("patch.slicer.fx_type", "FX type", "Slicer", "Per-step effect applied within the slice."),
+    pc("patch.slicer.fx_type", "FX type", "Slicer", "Per-step effect applied within the slice.", "slicer_fx_type"),
     p("patch.slicer.step_number", "Step number", "Slicer", "Number of active steps in the user pattern."),
     p("patch.slicer.steps.length", "Step length", "Slicer", "Length of a user-pattern step."),
     p("patch.slicer.steps.level", "Step level", "Slicer", "Output level of a user-pattern step."),
-    p("patch.slicer.steps.band", "Step band", "Slicer", "Frequency band used by a user-pattern step."),
+    pc("patch.slicer.steps.band", "Step band", "Slicer", "Frequency band used by a user-pattern step.", "slicer_step_band"),
     p("patch.slicer.steps.effect_level", "Step effect level", "Slicer", "Per-step effect amount."),
     p("patch.slicer.steps.effect_pitch", "Step effect pitch", "Slicer", "Per-step pitch of the slice effect."),
     p("patch.slicer.attack", "Attack", "Slicer", "Attack shape of each slice."),
     p("patch.slicer.duty", "Duty", "Slicer", "Duty cycle (on/off ratio) of the slices."),
     pl("patch.slicer.direct_level", "Direct level", "Slicer", "Level of the dry signal blended with the effect."),
-    p("patch.slicer.output_mode", "Output mode", "Slicer", "Output routing of the slicer."),
+    pc("patch.slicer.output_mode", "Output mode", "Slicer", "Output routing of the slicer.", "slicer_output_mode"),
 
     // ===== Patch / Overtone =====
     pk("patch.overtone.overtone_type", "Overtone type", "Overtone", "OVERTONE adds harmonics; DETUNE adds pitch-shifted layers.", Kind::Choice(&[choice("overtone","Overtone"),choice("detune","Detune")])),
@@ -539,15 +625,7 @@ mod tests {
 
     #[test]
     fn assign_catalogs_resolve_and_label() {
-        assert_eq!(
-            MD500_CATALOGS.names(),
-            &[
-                "assign_source",
-                "assign_target",
-                "eq_low_freq",
-                "eq_high_freq"
-            ]
-        );
+        assert_eq!(MD500_CATALOGS.names(), CATALOG_NAMES);
         assert!(MD500_CATALOGS.resolve("bogus", "x").is_none());
         // source: named + CC#.
         assert_eq!(MD500_CATALOGS.resolve("assign_source", "TAP/CTL"), Some(0));
@@ -597,6 +675,51 @@ mod tests {
             Some("16.0 kHz")
         );
         assert!(MD500_CATALOGS.label("eq_high_freq", 15).is_none());
+    }
+
+    #[test]
+    fn new_simple_catalogs_round_trip() {
+        // Spot-check each of the new lists: lookup by name, label back from index.
+        let cases = [
+            ("cut_low_freq", "FLAT", 0i64, "FLAT"),
+            ("cut_low_freq", "800 Hz", 17, "800 Hz"),
+            ("cut_high_freq", "630 Hz", 0, "630 Hz"),
+            ("cut_high_freq", "FLAT", 15, "FLAT"),
+            ("filter_mode", "LPF", 0, "LPF"),
+            ("filter_mode", "BPF", 2, "BPF"),
+            ("polarity", "DOWN", 0, "DOWN"),
+            ("polarity", "UP", 1, "UP"),
+            ("lfo_waveform_6", "SIN", 0, "SIN"),
+            ("lfo_waveform_6", "RAMP", 5, "RAMP"),
+            ("phaser_stage", "2", 0, "2"),
+            ("phaser_stage", "24", 4, "24"),
+            ("bi_phase", "CHORUS", 0, "CHORUS"),
+            ("bi_phase", "VIBRATO", 1, "VIBRATO"),
+            ("pattern_type", "PAT1", 0, "PAT1"),
+            ("pattern_type", "USER", 10, "USER"),
+            ("pattern_step_count", "8", 0, "8"),
+            ("pattern_step_count", "24", 3, "24"),
+            ("slicer_step_band", "THRU", 0, "THRU"),
+            ("slicer_step_band", "BAND6", 6, "BAND6"),
+            ("slicer_output_mode", "MONO", 0, "MONO"),
+            ("slicer_output_mode", "AUTO", 4, "AUTO"),
+            ("slicer_fx_type", "OFF", 0, "OFF"),
+            ("slicer_fx_type", "RING", 6, "RING"),
+            ("rotary_speed", "SLOW", 0, "SLOW"),
+            ("rotary_speed", "FAST", 1, "FAST"),
+        ];
+        for (cat, name, idx, back) in cases {
+            assert_eq!(
+                MD500_CATALOGS.resolve(cat, name),
+                Some(idx),
+                "{cat}: resolve {name}"
+            );
+            assert_eq!(
+                MD500_CATALOGS.label(cat, idx).as_deref(),
+                Some(back),
+                "{cat}: label {idx}"
+            );
+        }
     }
 
     #[test]
