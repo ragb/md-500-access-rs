@@ -267,11 +267,11 @@
       }
     },
     "CVibeType": {
-      "description": "C-VIBE sub-algorithm (offset 0x76).",
+      "description": "C-VIBE sub-algorithm (offset 0x76) — Univibe-style Chorus / Vibrato voicing.",
       "type": "string",
       "enum": [
-        "prime",
-        "scanner"
+        "chorus",
+        "vibrato"
       ]
     },
     "Chorus": {
