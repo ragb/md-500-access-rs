@@ -49,6 +49,11 @@ const CATALOG_NAMES: &[&str] = &[
     "tricho_lfo_mode",
     "scanner_mode",
     "onoff",
+    "step_rate_note",
+    "separation_deg",
+    "waveform_10",
+    "envelope_input",
+    "slicer_pattern",
 ];
 
 /// Low-band EQ corner-frequency labels (index 0..=16) — exactly the values
@@ -93,8 +98,8 @@ pub const LFO_WAVEFORM_6: [&str; 6] = ["SIN", "TRI", "SQR", "SAW-UP", "SAW-DOWN"
 /// Phaser stage count: 2 / 4 / 8 / 16 / 24 stages. Index 0..=4.
 pub const PHASER_STAGE: [&str; 5] = ["2", "4", "8", "16", "24"];
 
-/// Phaser bi-phase mode: CHORUS or VIBRATO voicing. Index 0..=1.
-pub const BI_PHASE: [&str; 2] = ["CHORUS", "VIBRATO"];
+/// Phaser bi-phase mode (just on/off). Index 0..=1. Spec §0x65 / §0x73.
+pub const BI_PHASE: [&str; 2] = ["OFF", "ON"];
 
 /// Filter PATTERN type — 10 factory patterns plus USER. Index 0..=10.
 pub const PATTERN_TYPE: [&str; 11] = [
@@ -130,6 +135,53 @@ pub const SCANNER_MODE: [&str; 6] = ["V1", "V2", "V3", "C1", "C2", "C3"];
 /// typed as `u8` on the wire (e.g. Vibrato `trigger`). Index 0..=1.
 pub const ONOFF: [&str; 2] = ["OFF", "ON"];
 
+/// Step rate as a note division, with `OFF` at index 0 followed by note
+/// divisions from `whole` down to `32nd`. Used by Flanger/Phaser step-rate
+/// fields. Index 0..=16.
+pub const STEP_RATE_NOTE: [&str; 17] = [
+    "OFF",
+    "whole",
+    "dotted half",
+    "whole triplet",
+    "half",
+    "dotted quarter",
+    "half triplet",
+    "quarter",
+    "dotted 8th",
+    "quarter triplet",
+    "8th",
+    "dotted 16th",
+    "8th triplet",
+    "16th",
+    "dotted 32nd",
+    "16th triplet",
+    "32nd",
+];
+
+/// Stereo separation in 15° steps from 0° to 180° — Flanger/Phaser engine
+/// separation field. Index 0..=12.
+pub const SEPARATION_DEG: [&str; 13] = [
+    "0deg", "15deg", "30deg", "45deg", "60deg", "75deg", "90deg", "105deg", "120deg", "135deg",
+    "150deg", "165deg", "180deg",
+];
+
+/// LFO waveform numeric labels — wire 0..=9 displays as 1..=10. Used by Chorus
+/// PRIME, Flanger/Phaser/Vibrato waveform fields per spec.
+pub const WAVEFORM_10: [&str; 10] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+
+/// Ring Modulator / Tremolo `intelligent` envelope-input selector — OFF or
+/// tuned to a guitar / bass signal range. Index 0..=2.
+pub const ENVELOPE_INPUT: [&str; 3] = ["OFF", "GUITAR", "BASS"];
+
+/// Slicer pattern selector: 30 preset patterns (P1..P30), 20 "hold" patterns
+/// (H1..H20), plus USER. Index 0..=50. Spec §0x68.
+pub const SLICER_PATTERN: [&str; 51] = [
+    "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13", "P14", "P15",
+    "P16", "P17", "P18", "P19", "P20", "P21", "P22", "P23", "P24", "P25", "P26", "P27", "P28",
+    "P29", "P30", "H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H11", "H12", "H13",
+    "H14", "H15", "H16", "H17", "H18", "H19", "H20", "USER",
+];
+
 fn lookup_index(list: &[&str], name: &str) -> Option<i64> {
     list.iter().position(|&s| s == name).map(|i| i as i64)
 }
@@ -155,6 +207,11 @@ const SIMPLE_LISTS: &[(&str, &[&str])] = &[
     ("tricho_lfo_mode", &TRICHO_LFO_MODE),
     ("scanner_mode", &SCANNER_MODE),
     ("onoff", &ONOFF),
+    ("step_rate_note", &STEP_RATE_NOTE),
+    ("separation_deg", &SEPARATION_DEG),
+    ("waveform_10", &WAVEFORM_10),
+    ("envelope_input", &ENVELOPE_INPUT),
+    ("slicer_pattern", &SLICER_PATTERN),
 ];
 
 fn simple_list(cat: &str) -> Option<&'static [&'static str]> {
@@ -384,7 +441,7 @@ static PARAMS: &[ParamMeta] = &[
     pl("patch.chorus.direct_level", "Direct level", "Chorus", "Level of the dry signal blended with the effect."),
     pl("patch.chorus.prime_depth", "PRIME depth", "Chorus", "Modulation depth of the PRIME chorus."),
     pk("patch.chorus.prime_pre_delay", "PRIME pre-delay", "Chorus", "Pre-delay before the chorus voice, 0–400 ms.", Kind::Range{min:0,max:400,unit:Some("ms")}),
-    p("patch.chorus.prime_waveform", "PRIME waveform", "Chorus", "Modulation waveform of the PRIME chorus (1–10)."),
+    pc("patch.chorus.prime_waveform", "PRIME waveform", "Chorus", "Modulation waveform of the PRIME chorus.", "waveform_10"),
     pl("patch.chorus.prime_sweetness", "PRIME sweetness", "Chorus", "Smooths and thickens the PRIME chorus voice."),
     pl("patch.chorus.prime_bell", "PRIME bell", "Chorus", "Adds bell-like shimmer to the PRIME chorus."),
     pc("patch.chorus.prime_low_cut", "PRIME low cut", "Chorus", "Low-cut filter on the PRIME chorus.", "cut_low_freq"),
@@ -411,9 +468,9 @@ static PARAMS: &[ParamMeta] = &[
     p("patch.flanger.prime_g.high_damp", "G high damp", "Flanger", "Damps the high end of the flange (PRIME G)."),
     pc("patch.flanger.prime_g.low_cut", "G low cut", "Flanger", "Low-cut filter (PRIME G).", "cut_low_freq"),
     pc("patch.flanger.prime_g.high_cut", "G high cut", "Flanger", "High-cut filter (PRIME G).", "cut_high_freq"),
-    p("patch.flanger.prime_g.separation", "G separation", "Flanger", "Stereo spread of the flange (PRIME G)."),
-    p("patch.flanger.prime_g.step_rate", "G step rate", "Flanger", "Step-modulation rate; Off for smooth sweep (PRIME G)."),
-    p("patch.flanger.prime_g.waveform", "G waveform", "Flanger", "Modulation waveform (PRIME G)."),
+    pc("patch.flanger.prime_g.separation", "G separation", "Flanger", "Stereo spread of the flange (PRIME G).", "separation_deg"),
+    pc("patch.flanger.prime_g.step_rate", "G step rate", "Flanger", "Step-modulation rate; OFF for smooth sweep (PRIME G).", "step_rate_note"),
+    pc("patch.flanger.prime_g.waveform", "G waveform", "Flanger", "Modulation waveform (PRIME G).", "waveform_10"),
     p("patch.flanger.prime_g.input_sens", "G input sens", "Flanger", "Input sensitivity for envelope response (PRIME G)."),
     pc("patch.flanger.prime_g.polarity", "G polarity", "Flanger", "Modulation polarity (PRIME G).", "polarity"),
     pl("patch.flanger.prime_b.depth", "B depth", "Flanger", "Modulation depth (PRIME B)."),
@@ -424,9 +481,9 @@ static PARAMS: &[ParamMeta] = &[
     p("patch.flanger.prime_b.high_damp", "B high damp", "Flanger", "Damps the high end of the flange (PRIME B)."),
     pc("patch.flanger.prime_b.low_cut", "B low cut", "Flanger", "Low-cut filter (PRIME B).", "cut_low_freq"),
     pc("patch.flanger.prime_b.high_cut", "B high cut", "Flanger", "High-cut filter (PRIME B).", "cut_high_freq"),
-    p("patch.flanger.prime_b.separation", "B separation", "Flanger", "Stereo spread of the flange (PRIME B)."),
-    p("patch.flanger.prime_b.step_rate", "B step rate", "Flanger", "Step-modulation rate; Off for smooth sweep (PRIME B)."),
-    p("patch.flanger.prime_b.waveform", "B waveform", "Flanger", "Modulation waveform (PRIME B)."),
+    pc("patch.flanger.prime_b.separation", "B separation", "Flanger", "Stereo spread of the flange (PRIME B).", "separation_deg"),
+    pc("patch.flanger.prime_b.step_rate", "B step rate", "Flanger", "Step-modulation rate; OFF for smooth sweep (PRIME B).", "step_rate_note"),
+    pc("patch.flanger.prime_b.waveform", "B waveform", "Flanger", "Modulation waveform (PRIME B).", "waveform_10"),
     p("patch.flanger.prime_b.input_sens", "B input sens", "Flanger", "Input sensitivity for envelope response (PRIME B)."),
     pc("patch.flanger.prime_b.polarity", "B polarity", "Flanger", "Modulation polarity (PRIME B).", "polarity"),
 
@@ -441,12 +498,12 @@ static PARAMS: &[ParamMeta] = &[
     p("patch.phaser.prime_g.high_damp", "G high damp", "Phaser", "Damps the high end (PRIME G)."),
     pc("patch.phaser.prime_g.low_cut", "G low cut", "Phaser", "Low-cut filter (PRIME G).", "cut_low_freq"),
     pc("patch.phaser.prime_g.high_cut", "G high cut", "Phaser", "High-cut filter (PRIME G).", "cut_high_freq"),
-    p("patch.phaser.prime_g.separation", "G separation", "Phaser", "Stereo spread (PRIME G)."),
-    p("patch.phaser.prime_g.waveform", "G waveform", "Phaser", "Modulation waveform (PRIME G)."),
+    pc("patch.phaser.prime_g.separation", "G separation", "Phaser", "Stereo spread (PRIME G).", "separation_deg"),
+    pc("patch.phaser.prime_g.waveform", "G waveform", "Phaser", "Modulation waveform (PRIME G).", "waveform_10"),
     p("patch.phaser.prime_g.input_sens", "G input sens", "Phaser", "Input sensitivity for envelope response (PRIME G)."),
     pc("patch.phaser.prime_g.polarity", "G polarity", "Phaser", "Modulation polarity (PRIME G).", "polarity"),
     pc("patch.phaser.prime_g.stage", "G stage", "Phaser", "Number of phaser stages (PRIME G).", "phaser_stage"),
-    p("patch.phaser.prime_g.step_rate", "G step rate", "Phaser", "Step-modulation rate (PRIME G)."),
+    pc("patch.phaser.prime_g.step_rate", "G step rate", "Phaser", "Step-modulation rate (PRIME G).", "step_rate_note"),
     pc("patch.phaser.prime_g.bi_phase", "G bi-phase", "Phaser", "Bi-phase mode for a richer sweep (PRIME G).", "bi_phase"),
     pl("patch.phaser.prime_b.depth", "B depth", "Phaser", "Modulation depth (PRIME B)."),
     p("patch.phaser.prime_b.resonance", "B resonance", "Phaser", "Resonance/feedback of the phase notches (PRIME B)."),
@@ -455,17 +512,17 @@ static PARAMS: &[ParamMeta] = &[
     p("patch.phaser.prime_b.high_damp", "B high damp", "Phaser", "Damps the high end (PRIME B)."),
     pc("patch.phaser.prime_b.low_cut", "B low cut", "Phaser", "Low-cut filter (PRIME B).", "cut_low_freq"),
     pc("patch.phaser.prime_b.high_cut", "B high cut", "Phaser", "High-cut filter (PRIME B).", "cut_high_freq"),
-    p("patch.phaser.prime_b.separation", "B separation", "Phaser", "Stereo spread (PRIME B)."),
-    p("patch.phaser.prime_b.waveform", "B waveform", "Phaser", "Modulation waveform (PRIME B)."),
+    pc("patch.phaser.prime_b.separation", "B separation", "Phaser", "Stereo spread (PRIME B).", "separation_deg"),
+    pc("patch.phaser.prime_b.waveform", "B waveform", "Phaser", "Modulation waveform (PRIME B).", "waveform_10"),
     p("patch.phaser.prime_b.input_sens", "B input sens", "Phaser", "Input sensitivity for envelope response (PRIME B)."),
     pc("patch.phaser.prime_b.polarity", "B polarity", "Phaser", "Modulation polarity (PRIME B).", "polarity"),
     pc("patch.phaser.prime_b.stage", "B stage", "Phaser", "Number of phaser stages (PRIME B).", "phaser_stage"),
-    p("patch.phaser.prime_b.step_rate", "B step rate", "Phaser", "Step-modulation rate (PRIME B)."),
+    pc("patch.phaser.prime_b.step_rate", "B step rate", "Phaser", "Step-modulation rate (PRIME B).", "step_rate_note"),
     pc("patch.phaser.prime_b.bi_phase", "B bi-phase", "Phaser", "Bi-phase mode for a richer sweep (PRIME B).", "bi_phase"),
     pl("patch.phaser.script_depth", "Script depth", "Phaser", "Modulation depth of the vintage Script phaser voicing."),
 
     // ===== Patch / C-Vibe =====
-    pk("patch.cvibe.cvibe_type", "C-Vibe type", "C-Vibe", "PRIME or the SCANNER vibrato voicing (after the Boss CE-1).", Kind::Choice(&[choice("prime","Prime"),choice("scanner","Scanner")])),
+    pk("patch.cvibe.cvibe_type", "C-Vibe type", "C-Vibe", "Univibe-style voicing — Chorus or Vibrato position of the scanner.", Kind::Choice(&[choice("chorus","Chorus"),choice("vibrato","Vibrato")])),
     p("patch.cvibe.note", "Note", "C-Vibe", "Sets the rate from the tempo as a note value."),
     pl("patch.cvibe.depth", "Depth", "C-Vibe", "Modulation depth."),
     pl("patch.cvibe.direct_level", "Direct level", "C-Vibe", "Level of the dry signal blended with the effect."),
@@ -479,7 +536,7 @@ static PARAMS: &[ParamMeta] = &[
     pc("patch.vibrato.trigger", "Trigger", "Vibrato", "Re-triggers the LFO from playing dynamics.", "onoff"),
     p("patch.vibrato.prime_rise_time", "Rise time", "Vibrato", "How quickly the vibrato fades in after a trigger."),
     p("patch.vibrato.prime_envelope_sens", "Envelope sens", "Vibrato", "Sensitivity of the envelope trigger."),
-    p("patch.vibrato.prime_waveform", "Waveform", "Vibrato", "Modulation waveform."),
+    pc("patch.vibrato.prime_waveform", "Waveform", "Vibrato", "Modulation waveform.", "waveform_10"),
     p("patch.vibrato.prime_input_sens", "Input sens", "Vibrato", "Input sensitivity for envelope response."),
     pc("patch.vibrato.scanner_mode", "Scanner mode", "Vibrato", "Univibe-style scanner position (V1–V3 vibrato, C1–C3 chorus).", "scanner_mode"),
 
@@ -512,7 +569,7 @@ static PARAMS: &[ParamMeta] = &[
     p("patch.ring_mod.frequency", "Frequency", "Ring Mod", "Carrier frequency of the ring modulator."),
     p("patch.ring_mod.freq_mod_rate", "Freq mod rate", "Ring Mod", "Rate at which the carrier frequency is modulated."),
     pl("patch.ring_mod.freq_mod_depth", "Freq mod depth", "Ring Mod", "Depth of the carrier-frequency modulation."),
-    p("patch.ring_mod.intelligent", "Intelligent", "Ring Mod", "Tracks the input pitch so the ring tone stays musical."),
+    pc("patch.ring_mod.intelligent", "Intelligent", "Ring Mod", "Envelope follower input matching — off, or tuned to the guitar / bass signal range.", "envelope_input"),
     pl("patch.ring_mod.direct_level", "Direct level", "Ring Mod", "Level of the dry signal blended with the effect."),
 
     // ===== Patch / Rotary (rotary speaker simulation) =====
@@ -561,7 +618,7 @@ static PARAMS: &[ParamMeta] = &[
 
     // ===== Patch / Slicer =====
     p("patch.slicer.note", "Note", "Slicer", "Sets the slice cycle from the tempo as a note value."),
-    p("patch.slicer.pattern", "Pattern", "Slicer", "Preset slice pattern, or USER to program your own."),
+    pc("patch.slicer.pattern", "Pattern", "Slicer", "Preset slice pattern (P1–P30, H1–H20), or USER to program your own.", "slicer_pattern"),
     pc("patch.slicer.fx_type", "FX type", "Slicer", "Per-step effect applied within the slice.", "slicer_fx_type"),
     p("patch.slicer.step_number", "Step number", "Slicer", "Number of active steps in the user pattern."),
     p("patch.slicer.steps.length", "Step length", "Slicer", "Length of a user-pattern step."),
@@ -710,8 +767,6 @@ mod tests {
             ("lfo_waveform_6", "RAMP", 5, "RAMP"),
             ("phaser_stage", "2", 0, "2"),
             ("phaser_stage", "24", 4, "24"),
-            ("bi_phase", "CHORUS", 0, "CHORUS"),
-            ("bi_phase", "VIBRATO", 1, "VIBRATO"),
             ("pattern_type", "PAT1", 0, "PAT1"),
             ("pattern_type", "USER", 10, "USER"),
             ("pattern_step_count", "8", 0, "8"),
@@ -730,6 +785,19 @@ mod tests {
             ("scanner_mode", "C3", 5, "C3"),
             ("onoff", "OFF", 0, "OFF"),
             ("onoff", "ON", 1, "ON"),
+            ("bi_phase", "OFF", 0, "OFF"),
+            ("bi_phase", "ON", 1, "ON"),
+            ("step_rate_note", "OFF", 0, "OFF"),
+            ("step_rate_note", "32nd", 16, "32nd"),
+            ("separation_deg", "0deg", 0, "0deg"),
+            ("separation_deg", "180deg", 12, "180deg"),
+            ("waveform_10", "1", 0, "1"),
+            ("waveform_10", "10", 9, "10"),
+            ("envelope_input", "OFF", 0, "OFF"),
+            ("envelope_input", "BASS", 2, "BASS"),
+            ("slicer_pattern", "P1", 0, "P1"),
+            ("slicer_pattern", "H20", 49, "H20"),
+            ("slicer_pattern", "USER", 50, "USER"),
         ];
         for (cat, name, idx, back) in cases {
             assert_eq!(

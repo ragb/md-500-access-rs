@@ -210,9 +210,9 @@ byte_enum! {
     valid = "0=prime g, 1=prime b"
 }
 byte_enum! {
-    /// C-VIBE sub-algorithm (offset 0x76).
-    CVibeType { Prime = 0, Scanner = 1 }
-    valid = "0=prime, 1=scanner"
+    /// C-VIBE sub-algorithm (offset 0x76) — Univibe-style Chorus / Vibrato voicing.
+    CVibeType { Chorus = 0, Vibrato = 1 }
+    valid = "0=chorus, 1=vibrato"
 }
 byte_enum! {
     /// FILTER sub-algorithm (offset 0xB1).
