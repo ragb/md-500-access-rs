@@ -9,15 +9,13 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-D warnings"
-  # Opt into Node 24 for JS actions ahead of the June 2026 forced switch.
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   native:
     name: Native (Ubuntu)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install Linux MIDI deps
         run: sudo apt-get update && sudo apt-get install -y libasound2-dev
@@ -54,7 +52,7 @@ jobs:
     name: WASM bindings
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -65,9 +63,10 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install wasm-pack
-        uses: jetli/wasm-pack-action@v0.4.0
+        uses: taiki-e/install-action@v2
         with:
-          version: latest
+          # Pinned so builds are reproducible.
+          tool: wasm-pack@0.15.0
 
       - name: wasm-pack test (Node)
         working-directory: md500-wasm
@@ -78,7 +77,7 @@ jobs:
         run: wasm-pack build --target web --release
 
       - name: Upload pkg/ artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: md500-wasm-pkg
           path: md500-wasm/pkg/
