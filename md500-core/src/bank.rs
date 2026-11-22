@@ -32,7 +32,7 @@ byte_enum! {
 }
 
 /// Typed view of a bank's SIMUL parameter block.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(deny_unknown_fields))]
@@ -93,7 +93,7 @@ mod tests {
     #[test]
     fn yaml_named_enums() {
         let bp = BankParams::from_bytes(&[0x00, 0x01, 0x00, 0x00]).unwrap();
-        let y = serde_yaml::to_string(&bp).unwrap();
+        let y = serde_norway::to_string(&bp).unwrap();
         assert!(y.contains("structure: series"));
         assert!(y.contains("insert_position: pre"));
         assert!(y.contains("output_mode: mix"));

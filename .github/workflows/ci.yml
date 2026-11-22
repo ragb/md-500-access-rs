@@ -17,7 +17,7 @@ jobs:
     name: Native (Ubuntu)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Linux MIDI deps
         run: sudo apt-get update && sudo apt-get install -y libasound2-dev
@@ -34,14 +34,14 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Clippy
-        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 
       - name: Test
         run: cargo test --workspace --locked
 
       - name: Verify schemas/ are up to date
         # Regenerates the committed JSON Schemas and fails if they drift. If this
-        # step fails locally, run `tools/regen-schemas.sh` and commit the result.
+        # step fails, rerun this loop writing into schemas/ and commit the result.
         run: |
           # area token : schema filename slug (patch-a/b/c share the patch schema)
           for pair in setup:setup system:system pc-map:pc-map bank:bank patch-a:patch; do
@@ -54,7 +54,7 @@ jobs:
     name: WASM bindings
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable

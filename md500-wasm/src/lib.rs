@@ -6,20 +6,18 @@
 //! helpers expose all 99 user banks (the CLI only reaches the Temporary bank).
 
 use md500_core::address::{
-    size_field, BankSlot, PatchSlot, BANK_MAX, BANK_TEMPORARY_BASE, PC_MAP_BASE, SETUP_BASE,
-    SYSTEM_BASE, SYSTEM_CONTROL_OFFSET,
+    BANK_MAX, BANK_TEMPORARY_BASE, BankSlot, PC_MAP_BASE, PatchSlot, SETUP_BASE, SYSTEM_BASE,
+    SYSTEM_CONTROL_OFFSET, size_field,
 };
-use md500_core::bank::{BankParams, BANK_PARAMS_LEN};
-use md500_core::patch::{Patch, PATCH_LEN};
-use md500_core::pc_map::{ProgramChangeMap, PC_MAP_LEN};
-use md500_core::setup::{Setup, SETUP_AREA_LEN};
-use md500_core::system::{SystemCommon, SystemControl, SYSTEM_COMMON_LEN, SYSTEM_CONTROL_LEN};
+use md500_core::bank::{BANK_PARAMS_LEN, BankParams};
+use md500_core::patch::{PATCH_LEN, Patch};
+use md500_core::pc_map::{PC_MAP_LEN, ProgramChangeMap};
+use md500_core::setup::{SETUP_AREA_LEN, Setup};
+use md500_core::system::{SYSTEM_COMMON_LEN, SYSTEM_CONTROL_LEN, SystemCommon, SystemControl};
 use md500_core::{
-    classify_inbound as core_classify, identify, identity_request, Frame, InboundMessage,
+    Frame, InboundMessage, classify_inbound as core_classify, identify, identity_request,
 };
 
-use serde::Serialize;
-use tsify_next::Tsify;
 use wasm_bindgen::prelude::*;
 
 fn js_err(e: impl std::fmt::Display) -> JsError {
@@ -242,34 +240,46 @@ pub fn field_meta(path: &str) -> Result<JsValue, JsError> {
 
 // === Inbound classification ===
 
-#[derive(Serialize, Tsify)]
-#[tsify(into_wasm_abi)]
-#[serde(tag = "kind", rename_all = "snake_case")]
-pub enum WasmInbound {
-    DataSet {
-        device_id: u8,
-        space: String,
-        #[tsify(type = "Uint8Array")]
-        address: Vec<u8>,
-        #[tsify(type = "Uint8Array")]
-        data: Vec<u8>,
-    },
-    DataRequest {
-        device_id: u8,
-        #[tsify(type = "Uint8Array")]
-        address: Vec<u8>,
-        #[tsify(type = "Uint8Array")]
-        size: Vec<u8>,
-    },
-    UnparseableSysEx {
-        #[tsify(type = "Uint8Array")]
-        bytes: Vec<u8>,
-        error: String,
-    },
-    NonSysEx {
-        #[tsify(type = "Uint8Array")]
-        bytes: Vec<u8>,
-    },
+pub use inbound_abi::WasmInbound;
+
+// In its own module so the `allow` stays scoped: tsify >= 0.5.7 deprecates
+// `into_wasm_abi` (in favour of `tsify::Ts`) and the lint fires on the derive's
+// sibling items, which only a module-level `allow` reaches. Kept so the JS ABI
+// (a plain object return) is unchanged.
+#[allow(deprecated)]
+mod inbound_abi {
+    use serde::Serialize;
+    use tsify::Tsify;
+
+    #[derive(Serialize, Tsify)]
+    #[tsify(into_wasm_abi)]
+    #[serde(tag = "kind", rename_all = "snake_case")]
+    pub enum WasmInbound {
+        DataSet {
+            device_id: u8,
+            space: String,
+            #[tsify(type = "Uint8Array")]
+            address: Vec<u8>,
+            #[tsify(type = "Uint8Array")]
+            data: Vec<u8>,
+        },
+        DataRequest {
+            device_id: u8,
+            #[tsify(type = "Uint8Array")]
+            address: Vec<u8>,
+            #[tsify(type = "Uint8Array")]
+            size: Vec<u8>,
+        },
+        UnparseableSysEx {
+            #[tsify(type = "Uint8Array")]
+            bytes: Vec<u8>,
+            error: String,
+        },
+        NonSysEx {
+            #[tsify(type = "Uint8Array")]
+            bytes: Vec<u8>,
+        },
+    }
 }
 
 impl From<InboundMessage> for WasmInbound {

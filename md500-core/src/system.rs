@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use midi_access_core::byte_enum;
 use midi_access_core::codec::bool_byte;
 
-use crate::codec::{from_offset, read_nibbles, to_offset, write_nibbles, CodecError};
+use crate::codec::{CodecError, from_offset, read_nibbles, to_offset, write_nibbles};
 use crate::common::{CcNumber, MidiRxChannel, MidiTxChannel};
 
 /// Encoded length of the System Common block.
@@ -114,7 +114,7 @@ fn bank_no_to_byte(n: u8, field: &'static str) -> Result<u8, CodecError> {
 // === System Common ===
 
 /// Typed view of the System Common block (`10 00 00 00`, 34 bytes).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(deny_unknown_fields))]
@@ -280,7 +280,7 @@ impl SystemCommon {
 // === System Control ===
 
 /// Typed view of the System Control block (`10 00 10 00`, 16 bytes).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(deny_unknown_fields))]
@@ -367,7 +367,7 @@ impl SystemControl {
 // === combined System document ===
 
 /// The full System document — both sub-blocks, dumped/synced together.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(deny_unknown_fields))]
@@ -411,8 +411,8 @@ mod tests {
     fn control_round_trips_with_signed_exp_targets() {
         let mut b = vec![0u8; SYSTEM_CONTROL_LEN];
         b[0x01] = 1; // tap function = tap
-                     // exp_target_min = display -100 → raw 0.
-                     // exp_target_max = display 23000 → raw 23100 = nibbles 5,9,3,12 → 0x5,0x9,0x3,0xC.
+        // exp_target_min = display -100 → raw 0.
+        // exp_target_max = display 23000 → raw 23100 = nibbles 5,9,3,12 → 0x5,0x9,0x3,0xC.
         b[0x0C..0x10].copy_from_slice(&write_nibbles(23100, 4));
         let c = SystemControl::from_bytes(&b).unwrap();
         assert_eq!(c.exp_target_min, -100);
@@ -431,7 +431,7 @@ mod tests {
     #[test]
     fn yaml_named_enums() {
         let c = SystemCommon::from_bytes(&sample_common()).unwrap();
-        let y = serde_yaml::to_string(&c).unwrap();
+        let y = serde_norway::to_string(&c).unwrap();
         assert!(y.contains("bank_wait_mode: immediate"));
         assert!(y.contains("foot_switch_mode: ab_simul"));
         assert!(y.contains("sync: auto"));

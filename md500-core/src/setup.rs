@@ -6,13 +6,13 @@
 use serde::{Deserialize, Serialize};
 
 use crate::codec::CodecError;
-use crate::common::{PatchRef, PATCH_REF_WIDTH};
+use crate::common::{PATCH_REF_WIDTH, PatchRef};
 
 /// Encoded length of the Setup Common block (one 3-byte patch index).
 pub const SETUP_AREA_LEN: usize = PATCH_REF_WIDTH;
 
 /// Typed view of the Setup area.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(deny_unknown_fields))]
@@ -70,7 +70,7 @@ mod tests {
     #[test]
     fn yaml_shape() {
         let s = Setup::from_bytes(&[0x00, 0x00, 0x00]).unwrap();
-        let y = serde_yaml::to_string(&s).unwrap();
+        let y = serde_norway::to_string(&s).unwrap();
         assert!(y.contains("current_patch:"));
         assert!(y.contains("bank: 1"));
         assert!(y.contains("slot: a"));

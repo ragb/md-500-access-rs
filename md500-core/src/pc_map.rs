@@ -8,7 +8,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::codec::CodecError;
-use crate::common::{PatchRef, PATCH_REF_WIDTH};
+use crate::common::{PATCH_REF_WIDTH, PatchRef};
 
 /// Program-change banks (Bank Select MSB values 0..=2).
 pub const PC_MAP_BANKS: usize = 3;
@@ -20,7 +20,7 @@ pub const PC_MAP_ENTRIES: usize = PC_MAP_BANKS * PC_MAP_PROGRAMS; // 384
 pub const PC_MAP_LEN: usize = PC_MAP_ENTRIES * PATCH_REF_WIDTH; // 1152
 
 /// Typed view of the Program Change map.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(deny_unknown_fields))]
@@ -40,8 +40,9 @@ impl ProgramChangeMap {
                 actual: b.len(),
             });
         }
-        let entries = b
-            .chunks_exact(PATCH_REF_WIDTH)
+        let (chunks, _) = b.as_chunks::<PATCH_REF_WIDTH>();
+        let entries = chunks
+            .iter()
             .map(|c| PatchRef::from_bytes(c, "pc_map_entry"))
             .collect::<Result<Vec<_>, _>>()?;
         Ok(Self { entries })

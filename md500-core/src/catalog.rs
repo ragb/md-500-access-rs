@@ -16,9 +16,9 @@
 //!
 //! [`Catalogs`]: midi_access_core::Catalogs
 
-use midi_access_core::meta::{choice, Choice, Kind, Level, ParamMeta};
+use midi_access_core::meta::{Choice, Kind, Level, ParamMeta, choice};
 use midi_access_core::{Catalogs, Params};
-use serde_yaml::{Mapping, Value};
+use serde_norway::{Mapping, Value};
 
 /// The MD-500's name↔number value catalogs — the two big assign lists and the
 /// EQ corner-frequency tables.
@@ -241,7 +241,7 @@ impl Catalogs for Md500Catalogs {
         CATALOG_NAMES
     }
     fn as_value(&self) -> Value {
-        use serde_yaml::Sequence;
+        use serde_norway::Sequence;
         let to_seq =
             |xs: &[&str]| -> Sequence { xs.iter().map(|s| Value::String(s.to_string())).collect() };
         let src: Sequence = (0..crate::assigncat::SOURCE_COUNT)

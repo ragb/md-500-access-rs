@@ -26,10 +26,10 @@ pub const PATCH_YAML_HEADER: &str =
 macro_rules! yaml_codec {
     ($to:ident, $from:ident, $ty:ty) => {
         pub fn $to(v: &$ty) -> Result<String, CodecError> {
-            serde_yaml::to_string(v).map_err(|e| CodecError::Yaml(e.to_string()))
+            serde_norway::to_string(v).map_err(|e| CodecError::Yaml(e.to_string()))
         }
         pub fn $from(s: &str) -> Result<$ty, CodecError> {
-            serde_yaml::from_str(s).map_err(|e| CodecError::Yaml(e.to_string()))
+            serde_norway::from_str(s).map_err(|e| CodecError::Yaml(e.to_string()))
         }
     };
 }

@@ -32,7 +32,7 @@ use midi_access_core::codec::{
     bool_byte, read_ascii, signed_center, to_signed_center, write_ascii,
 };
 
-use crate::codec::{read_nibbles, write_nibbles, CodecError};
+use crate::codec::{CodecError, read_nibbles, write_nibbles};
 use crate::common::NoteValue;
 use crate::system::{CtlFunction, ExpFunction};
 
@@ -263,7 +263,7 @@ byte_enum! {
 // === common header (0x10..0x23) ===
 
 /// Shared modulation parameters present for every mode (offsets 0x10..0x23).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -335,7 +335,7 @@ impl PatchCommon {
 // === CHORUS (0x23..0x38) ===
 
 /// CHORUS-mode parameters (PRIME / CE-1 CHORUS / CE-1 VIBRATO / TRI-CHO).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -424,7 +424,7 @@ impl Chorus {
 // === FLANGER (0x38..0x55) ===
 
 /// One FLANGER engine (PRIME G or PRIME B share this 13-byte layout).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -490,7 +490,7 @@ impl FlangerEngine {
 }
 
 /// FLANGER-mode parameters.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -525,7 +525,7 @@ impl Flanger {
 // === PHASER (0x55..0x76) ===
 
 /// One PHASER engine (PRIME G or PRIME B share this 14-byte layout).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -589,7 +589,7 @@ impl PhaserEngine {
 }
 
 /// PHASER-mode parameters.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -632,7 +632,7 @@ impl Phaser {
 // === C-VIBE (0x76..0x7A) ===
 
 /// C-VIBE-mode parameters.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -664,7 +664,7 @@ impl CVibe {
 // === VIBRATO (0x7A..0x85) ===
 
 /// VIBRATO-mode parameters (PRIME + SCANNER).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -722,7 +722,7 @@ impl Vibrato {
 // === TREMOLO (0x85..0x95) ===
 
 /// TREMOLO-mode parameters (PRIME T / PRIME P / TWIN / DELUXE).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -794,7 +794,7 @@ impl Tremolo {
 // === DIMENSION (0x95..0x9C) ===
 
 /// DIMENSION-mode parameters.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -835,7 +835,7 @@ impl Dimension {
 // === RING MOD (0x9C..0xA3) ===
 
 /// RING MODULATION-mode parameters.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -871,7 +871,7 @@ impl RingMod {
 // === ROTARY (0xA3..0xB1) ===
 
 /// ROTARY-mode parameters.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -922,7 +922,7 @@ impl Rotary {
 // === FILTER (0xB1..0xE7) ===
 
 /// One AUTO WAH engine (G or B).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -935,7 +935,7 @@ pub struct AutoWah {
 }
 
 /// One TOUCH WAH engine (G or B).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -949,7 +949,7 @@ pub struct TouchWah {
 }
 
 /// FILTER PATTERN engine.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -964,7 +964,7 @@ pub struct FilterPattern {
 }
 
 /// FILTER-mode parameters (A-WAH G/B, T-WAH G/B, PATTERN).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1076,7 +1076,7 @@ impl Filter {
 // === SLICER (0xE7..0x167) ===
 
 /// One SLICER user-pattern step.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1089,7 +1089,7 @@ pub struct SlicerStep {
 }
 
 /// SLICER-mode parameters.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1167,7 +1167,7 @@ impl Slicer {
 // === OVERTONE (0x167..0x173) ===
 
 /// OVERTONE-mode parameters.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1228,7 +1228,7 @@ impl Overtone {
 
 /// Per-patch footswitch / expression assignments (used when the matching System
 /// Control `preference` is `PATCH`).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1289,7 +1289,7 @@ impl PatchControl {
 /// (`0..=264`) index large controller / parameter-target lists kept as integers;
 /// `target_min`/`target_max` are the device's scaled target values (display
 /// `-100..=2400000`).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1372,7 +1372,7 @@ impl Assign {
 // === the full patch ===
 
 /// A complete MD-500 patch (586 bytes).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1501,7 +1501,7 @@ mod tests {
         b[0x20] = 1; // insert_sw = pre
         b[0x21] = 1; // output_mode = stereo
         b[0x22] = 6; // output_gain → 0
-                     // chorus pre-delay (0x27..0x2A) = 200 ms
+        // chorus pre-delay (0x27..0x2A) = 200 ms
         b[0x27..0x2A].copy_from_slice(&write_nibbles(200, 3));
         // ring mod rate (0x9D..0xA0), rotary rates (0xA4.., 0xA7..), rotor/horn (0xAD..0xAF)
         b[0x9D..0xA0].copy_from_slice(&write_nibbles(100, 3));
@@ -1561,8 +1561,8 @@ mod tests {
     #[test]
     fn yaml_round_trips() {
         let p = Patch::from_bytes(&sample_bytes()).unwrap();
-        let y = serde_yaml::to_string(&p).unwrap();
-        let back: Patch = serde_yaml::from_str(&y).unwrap();
+        let y = serde_norway::to_string(&p).unwrap();
+        let back: Patch = serde_norway::from_str(&y).unwrap();
         assert_eq!(p, back);
         assert_eq!(back.to_bytes().unwrap(), p.to_bytes().unwrap());
     }
@@ -1570,7 +1570,7 @@ mod tests {
     #[test]
     fn yaml_uses_named_enums() {
         let p = Patch::from_bytes(&sample_bytes()).unwrap();
-        let y = serde_yaml::to_string(&p).unwrap();
+        let y = serde_norway::to_string(&p).unwrap();
         assert!(y.contains("mode: chorus"));
         assert!(y.contains("insert_sw: pre"));
         assert!(y.contains("output_mode: stereo"));

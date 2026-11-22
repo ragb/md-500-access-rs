@@ -1,6 +1,6 @@
 //! [`Device`] implementation for the BOSS MD-500 — the adapter that plugs the
 //! MD-500's typed Roland-SysEx codec into the generic CLI engine
-//! (`midi-access-cli`) and editor tooling, using `serde_yaml::Value` as the
+//! (`midi-access-cli`) and editor tooling, using `serde_norway::Value` as the
 //! document lingua franca.
 //!
 //! ## Areas
@@ -17,20 +17,20 @@
 //! ([`crate::address::BankSlot`] / [`crate::address::PatchSlot`]); the CLI covers
 //! the global areas and the live Temporary bank, mirroring the RE-202 split.
 
-use serde_yaml::Value;
+use serde_norway::Value;
 
-use midi_access_core::{split_sysex, Area, Catalogs, Device, DeviceError, Inbound, Params};
+use midi_access_core::{Area, Catalogs, Device, DeviceError, Inbound, Params, split_sysex};
 
 use crate::address::{
-    add_offset, from_u28, size_field, to_u28, AddressSpace, BankSlot, PatchSlot,
-    BANK_TEMPORARY_BASE, PC_MAP_BASE, SETUP_BASE, SYSTEM_BASE, SYSTEM_CONTROL_OFFSET,
+    AddressSpace, BANK_TEMPORARY_BASE, BankSlot, PC_MAP_BASE, PatchSlot, SETUP_BASE, SYSTEM_BASE,
+    SYSTEM_CONTROL_OFFSET, add_offset, from_u28, size_field, to_u28,
 };
-use crate::bank::{BankParams, BANK_PARAMS_LEN};
-use crate::patch::{Patch, PATCH_LEN};
-use crate::pc_map::{ProgramChangeMap, PC_MAP_LEN};
-use crate::setup::{Setup, SETUP_AREA_LEN};
-use crate::sysex::{identify, Frame, CMD_DT1};
-use crate::system::{System, SystemCommon, SystemControl, SYSTEM_COMMON_LEN, SYSTEM_CONTROL_LEN};
+use crate::bank::{BANK_PARAMS_LEN, BankParams};
+use crate::patch::{PATCH_LEN, Patch};
+use crate::pc_map::{PC_MAP_LEN, ProgramChangeMap};
+use crate::setup::{SETUP_AREA_LEN, Setup};
+use crate::sysex::{CMD_DT1, Frame, identify};
+use crate::system::{SYSTEM_COMMON_LEN, SYSTEM_CONTROL_LEN, System, SystemCommon, SystemControl};
 
 /// The BOSS MD-500 modulation pedal.
 pub struct Md500;
@@ -256,7 +256,7 @@ impl Device for Md500 {
         match target_for(area).ok_or_else(|| unknown(area))? {
             Target::Setup => {
                 let d = collect_block(dump, SETUP_BASE, SETUP_AREA_LEN)?;
-                serde_yaml::to_value(Setup::from_bytes(&d).map_err(dec)?).map_err(dec)
+                serde_norway::to_value(Setup::from_bytes(&d).map_err(dec)?).map_err(dec)
             }
             Target::System => {
                 let common = collect_block(dump, SYSTEM_BASE, SYSTEM_COMMON_LEN)?;
@@ -269,19 +269,19 @@ impl Device for Md500 {
                     common: SystemCommon::from_bytes(&common).map_err(dec)?,
                     control: SystemControl::from_bytes(&control).map_err(dec)?,
                 };
-                serde_yaml::to_value(system).map_err(dec)
+                serde_norway::to_value(system).map_err(dec)
             }
             Target::PcMap => {
                 let d = collect_block(dump, PC_MAP_BASE, PC_MAP_LEN)?;
-                serde_yaml::to_value(ProgramChangeMap::from_bytes(&d).map_err(dec)?).map_err(dec)
+                serde_norway::to_value(ProgramChangeMap::from_bytes(&d).map_err(dec)?).map_err(dec)
             }
             Target::Bank => {
                 let d = collect_block(dump, BANK_TEMPORARY_BASE, BANK_PARAMS_LEN)?;
-                serde_yaml::to_value(BankParams::from_bytes(&d).map_err(dec)?).map_err(dec)
+                serde_norway::to_value(BankParams::from_bytes(&d).map_err(dec)?).map_err(dec)
             }
             Target::Patch(slot) => {
                 let d = collect_block(dump, slot.base_address(BankSlot::Temporary), PATCH_LEN)?;
-                serde_yaml::to_value(Patch::from_bytes(&d).map_err(dec)?).map_err(dec)
+                serde_norway::to_value(Patch::from_bytes(&d).map_err(dec)?).map_err(dec)
             }
         }
     }
@@ -292,11 +292,11 @@ impl Device for Md500 {
         let mut out = Vec::new();
         match target {
             Target::Setup => {
-                let s: Setup = serde_yaml::from_value(doc.clone()).map_err(enc)?;
+                let s: Setup = serde_norway::from_value(doc.clone()).map_err(enc)?;
                 push_dt1(&mut out, id, SETUP_BASE, s.to_bytes().map_err(enc)?);
             }
             Target::System => {
-                let s: System = serde_yaml::from_value(doc.clone()).map_err(enc)?;
+                let s: System = serde_norway::from_value(doc.clone()).map_err(enc)?;
                 push_dt1(&mut out, id, SYSTEM_BASE, s.common.to_bytes().map_err(enc)?);
                 push_dt1(
                     &mut out,
@@ -306,11 +306,11 @@ impl Device for Md500 {
                 );
             }
             Target::PcMap => {
-                let m: ProgramChangeMap = serde_yaml::from_value(doc.clone()).map_err(enc)?;
+                let m: ProgramChangeMap = serde_norway::from_value(doc.clone()).map_err(enc)?;
                 push_dt1(&mut out, id, PC_MAP_BASE, m.to_bytes().map_err(enc)?);
             }
             Target::Bank => {
-                let b: BankParams = serde_yaml::from_value(doc.clone()).map_err(enc)?;
+                let b: BankParams = serde_norway::from_value(doc.clone()).map_err(enc)?;
                 push_dt1(
                     &mut out,
                     id,
@@ -319,7 +319,7 @@ impl Device for Md500 {
                 );
             }
             Target::Patch(slot) => {
-                let p: Patch = serde_yaml::from_value(doc.clone()).map_err(enc)?;
+                let p: Patch = serde_norway::from_value(doc.clone()).map_err(enc)?;
                 push_dt1(
                     &mut out,
                     id,
@@ -338,7 +338,7 @@ impl Device for Md500 {
                 model: is_md500.then(|| "MD-500".to_string()),
             };
         }
-        use crate::inbound::{classify_inbound as core, InboundMessage};
+        use crate::inbound::{InboundMessage, classify_inbound as core};
         match core(bytes) {
             InboundMessage::DataSet {
                 space,
@@ -362,11 +362,11 @@ impl Device for Md500 {
     fn accepts(area: &str, doc: &Value) -> bool {
         let v = doc.clone();
         match target_for(area) {
-            Some(Target::Setup) => serde_yaml::from_value::<Setup>(v).is_ok(),
-            Some(Target::System) => serde_yaml::from_value::<System>(v).is_ok(),
-            Some(Target::PcMap) => serde_yaml::from_value::<ProgramChangeMap>(v).is_ok(),
-            Some(Target::Bank) => serde_yaml::from_value::<BankParams>(v).is_ok(),
-            Some(Target::Patch(_)) => serde_yaml::from_value::<Patch>(v).is_ok(),
+            Some(Target::Setup) => serde_norway::from_value::<Setup>(v).is_ok(),
+            Some(Target::System) => serde_norway::from_value::<System>(v).is_ok(),
+            Some(Target::PcMap) => serde_norway::from_value::<ProgramChangeMap>(v).is_ok(),
+            Some(Target::Bank) => serde_norway::from_value::<BankParams>(v).is_ok(),
+            Some(Target::Patch(_)) => serde_norway::from_value::<Patch>(v).is_ok(),
             None => false,
         }
     }

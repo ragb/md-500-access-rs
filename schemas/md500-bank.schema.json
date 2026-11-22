@@ -1,14 +1,8 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "BankParams",
   "description": "Typed view of a bank's SIMUL parameter block.",
   "type": "object",
-  "required": [
-    "ab_sync_sw",
-    "insert_position",
-    "output_mode",
-    "structure"
-  ],
   "properties": {
     "ab_sync_sw": {
       "description": "Synchronise A and B tempo/LFO (offset 0x03).",
@@ -16,31 +10,25 @@
     },
     "insert_position": {
       "description": "Insert position relative to the loop (offset 0x01).",
-      "allOf": [
-        {
-          "$ref": "#/definitions/BankInsertPosition"
-        }
-      ]
+      "$ref": "#/$defs/BankInsertPosition"
     },
     "output_mode": {
       "description": "Mix vs A/B output routing (offset 0x02).",
-      "allOf": [
-        {
-          "$ref": "#/definitions/BankOutputMode"
-        }
-      ]
+      "$ref": "#/$defs/BankOutputMode"
     },
     "structure": {
       "description": "Series vs parallel routing of the two effects (offset 0x00).",
-      "allOf": [
-        {
-          "$ref": "#/definitions/BankStructure"
-        }
-      ]
+      "$ref": "#/$defs/BankStructure"
     }
   },
   "additionalProperties": false,
-  "definitions": {
+  "required": [
+    "structure",
+    "insert_position",
+    "output_mode",
+    "ab_sync_sw"
+  ],
+  "$defs": {
     "BankInsertPosition": {
       "description": "Where the bank's effects sit relative to the insert loop. (`Insert Position`)",
       "type": "string",

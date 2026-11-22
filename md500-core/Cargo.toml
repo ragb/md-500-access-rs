@@ -2,6 +2,7 @@
 name = "md500-core"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "BOSS MD-500 modulation pedal SysEx codec (pure, no I/O)."
@@ -9,7 +10,7 @@ description = "BOSS MD-500 modulation pedal SysEx codec (pure, no I/O)."
 [features]
 default = []
 # Enabled by the wasm crate. Adds Tsify derives so types render as TS.
-tsify = ["dep:tsify-next", "dep:wasm-bindgen"]
+tsify = ["dep:tsify", "dep:wasm-bindgen"]
 # Enabled by the CLI when emitting JSON Schema. Adds schemars derives.
 schema = ["dep:schemars", "midi-access-core/schema"]
 
@@ -17,7 +18,7 @@ schema = ["dep:schemars", "midi-access-core/schema"]
 midi-access-core = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
-serde_yaml = { workspace = true }
-tsify-next = { workspace = true, optional = true }
+serde_norway = { workspace = true }
+tsify = { workspace = true, optional = true }
 wasm-bindgen = { workspace = true, optional = true }
 schemars = { workspace = true, optional = true }

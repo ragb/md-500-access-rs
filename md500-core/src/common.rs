@@ -14,7 +14,7 @@ use crate::codec::CodecError;
 /// Wire encoding (the spec's "MIDI … Control Change#" fields, range `0 - 63`):
 /// `0 = OFF`, `1..=31 = CC#1..#31`, `32..=63 = CC#64..#95`. YAML: `off`, or the
 /// integer CC number (e.g. `17`, `64`).
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -24,7 +24,7 @@ pub enum CcNumber {
     Number(u8),
 }
 
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -65,7 +65,7 @@ impl CcNumber {
 
 /// MIDI receive channel. Wire `0 - 16`: `0..=15 = Ch.1..Ch.16`, `16 = OFF`.
 /// YAML: an integer `1..=16`, or `off`.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -75,7 +75,7 @@ pub enum MidiRxChannel {
     Symbolic(RxSymbol),
 }
 
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -111,7 +111,7 @@ impl MidiRxChannel {
 
 /// MIDI transmit channel. Wire `0 - 17`: `0..=15 = Ch.1..Ch.16`, `16 = Rx`
 /// (follow receive channel), `17 = OFF`. YAML: an integer `1..=16`, `rx`, or `off`.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -121,7 +121,7 @@ pub enum MidiTxChannel {
     Symbolic(TxSymbol),
 }
 
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -174,7 +174,7 @@ midi_access_core::byte_enum! {
 /// Wire encoding: a single index `0..=296` (`0 = 01A`, `1 = 01B`, `2 = 01C`,
 /// `3 = 02A`, … `296 = 99C`), nibble-packed across 3 bytes. YAML: `{ bank: 12,
 /// slot: b }`.
-#[cfg_attr(feature = "tsify", derive(tsify_next::Tsify))]
+#[cfg_attr(feature = "tsify", derive(tsify::Tsify))]
 #[cfg_attr(feature = "tsify", tsify(into_wasm_abi, from_wasm_abi))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -277,9 +277,14 @@ mod tests {
 
     #[test]
     fn cc_number_yaml_is_off_or_int() {
-        assert_eq!(serde_yaml::to_string(&CcNumber::OFF).unwrap().trim(), "off");
         assert_eq!(
-            serde_yaml::to_string(&CcNumber::Number(64)).unwrap().trim(),
+            serde_norway::to_string(&CcNumber::OFF).unwrap().trim(),
+            "off"
+        );
+        assert_eq!(
+            serde_norway::to_string(&CcNumber::Number(64))
+                .unwrap()
+                .trim(),
             "64"
         );
     }

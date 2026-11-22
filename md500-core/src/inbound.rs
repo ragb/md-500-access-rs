@@ -4,7 +4,7 @@
 //! command bytes and address prefixes (the ml10x/re202 lesson).
 
 use crate::address::AddressSpace;
-use crate::sysex::{Frame, SysExError, CMD_DT1, CMD_RQ1, SYSEX_START};
+use crate::sysex::{CMD_DT1, CMD_RQ1, Frame, SYSEX_START, SysExError};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InboundMessage {

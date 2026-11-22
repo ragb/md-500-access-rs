@@ -2,6 +2,7 @@
 name = "md500-wasm"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "WASM + TypeScript bindings for md500-core."
@@ -14,10 +15,7 @@ md500-core = { workspace = true, features = ["tsify"] }
 wasm-bindgen = { workspace = true }
 serde = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
-tsify-next = { workspace = true }
-# Required because a transitive dep may pull in `getrandom`; the `.cargo/config.toml`
-# flag and this feature must both be set.
-getrandom = { workspace = true }
+tsify = { workspace = true }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
